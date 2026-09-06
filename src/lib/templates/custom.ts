@@ -55,7 +55,8 @@ export function rowToTemplate(r: UserTemplateRow): Template {
 }
 
 export async function listUserTemplates(userId: string): Promise<UserTemplateRow[]> {
-  const { data } = await adminClient().from("user_templates").select("*").eq("user_id", userId).order("updated_at", { ascending: false });
+  const { data, error } = await adminClient().from("user_templates").select("*").eq("user_id", userId).order("updated_at", { ascending: false });
+  if (error) console.error("listUserTemplates: falha ao consultar user_templates (rodou a migration 0005_user_templates.sql?)", error);
   return (data as UserTemplateRow[]) ?? [];
 }
 
@@ -69,7 +70,8 @@ export async function listTemplatesFor(userId: string): Promise<Template[]> {
 export async function resolveTemplateId(id: string, userId: string): Promise<{ template: Template; userTemplateId: string | null }> {
   if (id.startsWith(USER_PREFIX)) {
     const uid = id.slice(USER_PREFIX.length);
-    const { data } = await adminClient().from("user_templates").select("*").eq("id", uid).eq("user_id", userId).maybeSingle();
+    const { data, error } = await adminClient().from("user_templates").select("*").eq("id", uid).eq("user_id", userId).maybeSingle();
+    if (error) console.error("resolveTemplateId: falha ao consultar user_templates", error);
     if (data) return { template: rowToTemplate(data as UserTemplateRow), userTemplateId: uid };
   }
   return { template: getTemplate(id, await listTemplates()), userTemplateId: null };
@@ -78,7 +80,8 @@ export async function resolveTemplateId(id: string, userId: string): Promise<{ t
 /** Template efetivo de um carrossel: o do usuário quando existe, senão o base. */
 export async function templateForCarousel(carousel: Pick<Carousel, "template_id" | "user_template_id">): Promise<Template> {
   if (carousel.user_template_id) {
-    const { data } = await adminClient().from("user_templates").select("*").eq("id", carousel.user_template_id).maybeSingle();
+    const { data, error } = await adminClient().from("user_templates").select("*").eq("id", carousel.user_template_id).maybeSingle();
+    if (error) console.error("templateForCarousel: falha ao consultar user_templates", error);
     if (data) return rowToTemplate(data as UserTemplateRow);
   }
   return getTemplate(carousel.template_id, await listTemplates());
