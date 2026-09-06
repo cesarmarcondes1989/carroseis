@@ -40,7 +40,9 @@ export async function grantCredits(userId: string, amount: number, kind: Kind, d
 }
 
 export async function logUsage(userId: string | null, event: string, meta?: Record<string, unknown>) {
-  await adminClient().from("usage_events").insert({ user_id: userId, event, meta: meta ?? null });
+  const db = adminClient();
+  await db.from("usage_events").insert({ user_id: userId, event, meta: meta ?? null });
+  if (userId) await db.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("id", userId);
 }
 
 export function planActive(profile: { plan: string; plan_expires_at: string | null; unlimited_credits: boolean; role: string }) {

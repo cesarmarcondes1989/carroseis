@@ -5,5 +5,6 @@ import { getSession } from "@/lib/supabase/server";
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { profile } = await getSession();
   if (!profile) redirect("/login?next=/app");
+  if (profile.is_banned) redirect("/banido");
   return <AppShell profile={profile}>{children}</AppShell>;
 }

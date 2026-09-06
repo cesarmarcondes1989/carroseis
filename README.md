@@ -40,6 +40,15 @@ Gerador de carrosséis para Instagram com IA. Você escolhe o template e diz o t
 
 Conta nova ganha 30 créditos. A conta admin (`contato@cesar-marcondes.com`) tem saldo ilimitado e acesso ao `/admin`.
 
+## Painel admin (`/admin`)
+
+Rode também `supabase/migrations/0002_admin.sql` (ou `supabase db push`). Ele cria auditoria, banimento, estatísticas agregadas e a proteção da **conta dona**.
+
+- **Visão geral**: KPIs com tendência, gráficos de 7/30/90 dias (cadastros, ativos, carrosséis app vs MCP, créditos, receita), templates mais usados, origem do conteúdo, planos, feed em tempo real, novos usuários, top usuários e últimas ações admin.
+- **Usuários**: busca, filtros (novos, pagantes, ativos, admins, banidos), página por usuário com ledger, carrosséis, chaves MCP, pagamentos e ações: ajustar créditos, plano, ilimitado, admin, banir, revogar chaves, excluir, notas internas.
+- **Pagamentos**, **Atividade** (eventos + auditoria) e **Catálogo** (preços dos planos e templates ativos).
+- **Admins**: só a conta dona promove ou rebaixa. Quem é dona vem de `OWNER_EMAILS` (env, padrão `contato@cesar-marcondes.com`) e de `admin_emails()` no banco. Triggers impedem excluir, rebaixar, banir ou tirar o ilimitado dela por qualquer caminho, inclusive SQL direto e cascade do `auth.users`.
+
 ## MCP no Claude
 
 1. Em **Meu estúdio > Chave API / MCP**, gere uma chave.

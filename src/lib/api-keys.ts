@@ -21,7 +21,7 @@ export async function resolveApiKey(key: string | null | undefined): Promise<Pro
   const { data: row } = await db.from("api_keys").select("id, user_id, revoked_at, calls").eq("key_hash", hashKey(key)).maybeSingle();
   if (!row || row.revoked_at) return null;
   const { data: profile } = await db.from("profiles").select("*").eq("id", row.user_id).single();
-  if (!profile) return null;
+  if (!profile || profile.is_banned) return null;
   await db.from("api_keys").update({ last_used_at: new Date().toISOString(), calls: (row.calls ?? 0) + 1 }).eq("id", row.id);
   return profile as Profile;
 }

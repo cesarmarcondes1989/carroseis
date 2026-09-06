@@ -98,6 +98,10 @@ export type Profile = {
   plan_expires_at: string | null;
   locale: string;
   instagram_handle: string | null;
+  last_active_at: string | null;
+  is_banned: boolean;
+  banned_reason: string | null;
+  admin_notes: string | null;
   created_at: string;
 };
 

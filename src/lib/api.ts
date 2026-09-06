@@ -12,13 +12,8 @@ export class HttpError extends Error {
 export async function requireProfile(): Promise<Profile> {
   const { profile } = await getSession();
   if (!profile) throw new HttpError(401, "Faça login.");
+  if (profile.is_banned) throw new HttpError(403, "BANNED");
   return profile;
-}
-
-export async function requireAdmin(): Promise<Profile> {
-  const p = await requireProfile();
-  if (p.role !== "admin") throw new HttpError(403, "Só admin.");
-  return p;
 }
 
 export function handleError(e: unknown) {
