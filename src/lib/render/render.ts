@@ -4,6 +4,7 @@ import { createElement } from "react";
 import { SIZES, type Aspect, type Slide, type Template } from "@/lib/types";
 import { SlideView, type ResolvedStyle } from "./Slide";
 import { loadFonts } from "./fonts";
+import { withSrgbProfile } from "./png-profile";
 
 export type RenderInput = {
   template: Template;
@@ -36,7 +37,7 @@ export async function renderSlidePng(input: RenderInput, index: number): Promise
   });
   const svg = await satori(element, { width: w, height: h, fonts });
   const png = new Resvg(svg, { fitTo: { mode: "width", value: w }, font: { loadSystemFonts: false } }).render().asPng();
-  return Buffer.from(png);
+  return withSrgbProfile(Buffer.from(png));
 }
 
 export async function renderAll(input: RenderInput): Promise<Buffer[]> {

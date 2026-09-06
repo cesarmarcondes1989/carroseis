@@ -64,6 +64,10 @@ Paleta: fundo `#0B0B0F`, violeta `#7C3AED` (inovação), ciano `#22D3EE` (tecnol
 
 Template da casa `desliza` (rode `supabase/migrations/0007_desliza.sql` pra ele existir no banco, já que carrosséis apontam pro template por chave estrangeira): foto em fade pro preto, número do card, manchete em Sora com a palavra entre **asteriscos** em lima (modo `highlightMode: "color"` das camadas), seta pra deslizar, CTA em violeta. As camadas ficam em `lib/layers/presets.ts` (`DESLIZA`) e também aparecem como preset no editor. `npx tsx scripts/desliza-test.ts` renderiza um exemplo. Templates por camadas recebem a foto de capa em todos os cards (cada camada decide se usa).
 
+## Cor errada só depois de salvar no celular
+
+O `resvg` gera o PNG sem nenhum chunk de perfil de cor. A maioria dos visualizadores assume sRGB nesse caso, mas o app Fotos do iOS às vezes não assume, e puxa verde (a cor mais sensível a isso) pra um tom acinzentado/violeta só depois que a imagem sai do navegador (via "Salvar no celular" ou download). Dentro do Safari a mesma imagem aparece certa, porque o navegador assume sRGB. `src/lib/render/png-profile.ts` insere o chunk padrão `sRGB` logo após o `IHDR` (como manda a própria spec do PNG), sem recodificar um único pixel: `renderSlidePng` em `render.ts` passa toda imagem final por ele antes de salvar no Storage.
+
 ## Ícone na tela inicial (PWA)
 
 `src/app/manifest.ts` gera o `manifest.webmanifest` (nome, cor, `start_url: /app`, modo standalone) e `src/app/apple-icon.png` é o ícone do iOS. Os PNGs em `public/icons` saem do chevron da marca com `node scripts/icons.mjs`. No iPhone: Compartilhar > Adicionar à Tela de Início.
