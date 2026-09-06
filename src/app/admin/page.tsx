@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Bars, Kpi, LineChart, SERIES, pct } from "@/components/admin/Charts";
+import { Bars, Kpi, LineChart, SERIES } from "@/components/admin/Charts";
+import { pct } from "@/lib/pct";
 import { getAdminStats } from "@/lib/admin";
 import { formatBRL } from "@/lib/format";
 import { adminClient } from "@/lib/supabase/admin";
