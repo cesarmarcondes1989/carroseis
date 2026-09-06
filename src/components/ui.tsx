@@ -18,7 +18,7 @@ export function BrandMark({ size = 28, className }: { size?: number; className?:
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
       <defs>
-        <linearGradient id="dz-g" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+        <linearGradient id="dz-g" x1="6" y1="24" x2="42" y2="24" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#7c3aed" />
           <stop offset="0.5" stopColor="#22d3ee" />
           <stop offset="1" stopColor="#a3e635" />

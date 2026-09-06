@@ -64,9 +64,13 @@ Paleta: fundo `#0B0B0F`, violeta `#7C3AED` (inovação), ciano `#22D3EE` (tecnol
 
 Template da casa `desliza` (rode `supabase/migrations/0007_desliza.sql` pra ele existir no banco, já que carrosséis apontam pro template por chave estrangeira): foto em fade pro preto, número do card, manchete em Sora com a palavra entre **asteriscos** em lima (modo `highlightMode: "color"` das camadas), seta pra deslizar, CTA em violeta. As camadas ficam em `lib/layers/presets.ts` (`DESLIZA`) e também aparecem como preset no editor. `npx tsx scripts/desliza-test.ts` renderiza um exemplo. Templates por camadas recebem a foto de capa em todos os cards (cada camada decide se usa).
 
+## Ícone na tela inicial (PWA)
+
+`src/app/manifest.ts` gera o `manifest.webmanifest` (nome, cor, `start_url: /app`, modo standalone) e `src/app/apple-icon.png` é o ícone do iOS. Os PNGs em `public/icons` saem do chevron da marca com `node scripts/icons.mjs`. No iPhone: Compartilhar > Adicionar à Tela de Início.
+
 ## Roteiro pra ser salvo e Score de Save
 
-O prompt do roteirista segue o que faz carrossel ser salvo e enviado por DM (o que o Instagram mais pesa em 2026): capa até 8 palavras com número, pergunta ou promessa; uma ideia por card, até 20 palavras no card; texto de apoio em todo card do meio; último card pedindo explicitamente pra salvar e mandar pra alguém. `src/lib/score.ts` calcula um **Score de Save** de 0 a 100, determinístico e sem IA, com checklist do que falta; aparece no estúdio (`SaveScore`) e na resposta do MCP.
+O prompt do roteirista segue o que faz carrossel ser salvo e enviado por DM (o que o Instagram mais pesa em 2026): capa até 8 palavras com número, pergunta ou promessa; uma ideia por card, até 20 palavras no card; texto de apoio em todo card do meio; último card pedindo explicitamente pra salvar e mandar pra alguém. A capa é gancho, não item 1: promete o que vem sem entregar; os títulos nunca são numerados (a arte já numera) nem rótulos de tópico. `src/lib/score.ts` calcula um **Score de Save** de 0 a 100, determinístico e sem IA, com checklist do que falta; aparece no estúdio (`SaveScore`) e na resposta do MCP.
 
 ## Série de carrosséis
 

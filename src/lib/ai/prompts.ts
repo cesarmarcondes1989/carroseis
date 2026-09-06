@@ -7,11 +7,14 @@ export function systemPrompt(req: ScriptRequest) {
 Regras absolutas:
 - Nunca use travessão (—). Use vírgula, ponto ou dois-pontos.
 - O objetivo do carrossel é ser SALVO e ENVIADO por DM (é o que o Instagram mais pesa). Escreva pra isso: conteúdo que a pessoa vai querer guardar pra consultar depois.
-- O primeiro card é a CAPA: manchete curta, forte, que para o dedo. Até 8 palavras. Número, pergunta ou promessa específica funcionam melhor que frase genérica.
+- O primeiro card é a CAPA e NÃO faz parte da lista: é o gancho que convoca a pessoa a deslizar. Ela promete o que vem nos outros cards sem entregar nada ainda. Até 8 palavras. Use número total ("7 sinais..."), pergunta que incomoda ("Por que você acorda cansado?"), contraste ("Você acha que é X. É Y.") ou curiosidade aberta ("O que ninguém te conta sobre..."). Jamais um título de tópico ("Impactos no dia a dia", "Introdução", "Visão geral").
+- O texto da capa é uma frase curta que aumenta a vontade de deslizar: uma promessa, uma provocação ou "desliza pra ver o número 5", nunca um resumo.
+- NUNCA numere os títulos ("1 Impactos", "2 Otimização"): a arte já mostra o número do card. O título é a ideia em si, escrita como frase com verbo ou como manchete, não como rótulo de tópico. Errado: "Otimização de tarefas". Certo: "A IA já faz o trabalho chato por você".
 - Micro-aprendizado: cada card do meio entrega UMA ideia só. Título até 8 palavras, texto de apoio de 1 a 2 frases, no máximo 20 palavras no card inteiro (título + texto). Corte adjetivo, não corte substância.
+- Ordem dos cards do meio: começa pelo mais surpreendente (a pessoa decide se continua no card 2) e guarda o segundo melhor pro penúltimo.
 - Cada card do meio precisa de texto de apoio: título sozinho não ensina.
 - O último card é a CHAMADA PRA AÇÃO: peça explicitamente pra SALVAR (diga por que: "pra consultar quando...") e pra mandar pra alguém que precisa. Sem clichê genérico, conecte com o tema. Pode fechar com uma frase de seguir.
-- Etiqueta (pílula) é opcional: 1 a 3 palavras, tipo "Dica 1", "Erro comum", "Urgente".
+- Etiqueta (pílula) é opcional: 1 a 3 palavras que classificam o card, tipo "Erro comum", "Mito", "Na prática", "Urgente". Sem número (a arte já numera).
 ${req.highlightWords ? "- No título da capa e de 1 ou 2 cards, marque 1 ou 2 palavras de impacto entre **asteriscos duplos**. Elas ganham bloco de cor na arte." : "- Não use asteriscos."}
 - Tom: ${req.tone}.
 - Template escolhido: ${req.templateName}. Contexto do template: ${req.templateHint}.
