@@ -12,7 +12,7 @@ const schema = z.object({
   templateId: z.string(),
   source: z.enum(["topic", "url", "youtube", "pdf", "script"]),
   topic: z.string().max(2000).optional(),
-  url: z.string().url().optional(),
+  url: z.preprocess((v) => (v === "" ? undefined : v), z.string().url().optional()),
   script: z.string().max(20000).optional(),
   slidesCount: z.coerce.number().int().min(2).max(10).default(7),
   tone: z.string().max(40).default("direto"),
