@@ -20,12 +20,11 @@ async function handle(req: Request, keyFromPath?: string) {
   const server = buildMcpServer(profile);
   const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   await server.connect(transport);
-  try {
-    return await transport.handleRequest(req);
-  } finally {
-    // stateless: fecha após responder (a resposta já foi materializada)
-    setTimeout(() => void transport.close().catch(() => {}), 0);
-  }
+  // Não feche o transport aqui: handleRequest devolve o stream de resposta antes
+  // da ferramenta terminar de rodar (o resultado chega depois, escrito nesse mesmo
+  // stream). A própria lib fecha a conexão sozinha assim que a resposta é entregue;
+  // fechar manualmente aqui corta o stream antes da resposta chegar.
+  return transport.handleRequest(req);
 }
 
 type Ctx = { params: Promise<{ key: string }> };

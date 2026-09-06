@@ -16,11 +16,8 @@ async function handle(req: Request) {
   const server = buildMcpServer(profile);
   const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   await server.connect(transport);
-  try {
-    return await transport.handleRequest(req);
-  } finally {
-    setTimeout(() => void transport.close().catch(() => {}), 0);
-  }
+  // Não feche o transport aqui: veja o comentário em [key]/route.ts.
+  return transport.handleRequest(req);
 }
 
 export const POST = handle;
