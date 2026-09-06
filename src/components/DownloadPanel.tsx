@@ -30,17 +30,29 @@ export function DownloadPanel({ carousel, canDownload }: { carousel: Carousel; c
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ kind: "ok" | "error" | "info"; text: string } | null>(null);
   const renders = [...(carousel.renders ?? [])].sort((a, b) => a.index - b.index);
-  const slideUrl = (i: number) => `/api/carousels/${carousel.id}/slide/${i + 1}`;
+  // "no-store" no servidor não apaga cache que o navegador já guardou de uma visita anterior a
+  // este deploy, e /slide/N é a mesma URL a cada regeração. Por isso a versão de cada render
+  // (o timestamp que já vai no caminho do Storage) entra na querystring: a URL muda sozinha
+  // sempre que a imagem muda, e nenhuma camada de cache (navegador, proxy, o que for) consegue
+  // devolver uma resposta velha pra uma URL nova.
+  const versionOf = (i: number) => carousel.renders?.find((r) => r.index === i)?.path.match(/\/(\d+)\/slide-/)?.[1] ?? "0";
+  const slideUrl = (i: number) => `/api/carousels/${carousel.id}/slide/${i + 1}?v=${versionOf(i)}`;
   const fileName = (i: number) => `${carousel.title.replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").toLowerCase() || "carrossel"}-${String(i + 1).padStart(2, "0")}.png`;
 
-  async function fetchFiles(indexes: number[]) {
-    const files: File[] = [];
-    for (const i of indexes) {
-      const res = await fetch(slideUrl(i));
-      if (res.status === 402) throw new Error("PLAN_REQUIRED");
-      if (!res.ok) throw new Error(t.common.error);
-      files.push(new File([await res.blob()], fileName(i), { type: "image/png" }));
+  /** Uma nova tentativa em erro de rede/servidor: numa série de vários cards, um único
+   * pedido instável não pode derrubar o "Salvar" inteiro e obrigar a pessoa a clicar de novo. */
+  async function fetchSlide(i: number): Promise<Blob> {
+    for (let attempt = 1; ; attempt++) {
+      const res = await fetch(slideUrl(i), { cache: "no-store" }).catch(() => null);
+      if (res?.status === 402) throw new Error("PLAN_REQUIRED");
+      if (res?.ok) return res.blob();
+      if (attempt >= 2) throw new Error(t.common.error);
     }
+  }
+
+  async function fetchFiles(indexes: number[]) {
+    const blobs = await Promise.all(indexes.map((i) => fetchSlide(i)));
+    const files = indexes.map((i, k) => new File([blobs[k]], fileName(i), { type: "image/png" }));
     return files;
   }
 
@@ -89,7 +101,7 @@ export function DownloadPanel({ carousel, canDownload }: { carousel: Carousel; c
       <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-7">
         {renders.map((r) => (
           <div key={r.index} className="group">
-            <a href={`${slideUrl(r.index)}?inline=1`} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-xl border border-line">
+            <a href={`${slideUrl(r.index)}&inline=1`} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-xl border border-line">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={r.url} alt={`Card ${r.index + 1}`} className="aspect-[4/5] w-full object-cover" loading="lazy" />
             </a>
