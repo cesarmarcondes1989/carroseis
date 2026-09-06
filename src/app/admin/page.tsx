@@ -49,7 +49,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
         <div className="card p-5"><LineChart title="Cadastros e usuários ativos por dia" labels={labels} series={[{ name: "Cadastros", values: d.map((p) => p.signups) }, { name: "Ativos", values: d.map((p) => p.active_users) }]} /></div>
         <div className="card p-5"><LineChart title="Carrosséis por dia: app vs Claude (MCP)" labels={labels} series={[{ name: "Total", values: d.map((p) => p.carousels) }, { name: "Via MCP", values: d.map((p) => p.mcp) }]} /></div>
         <div className="card p-5"><LineChart title="Créditos consumidos por dia" labels={labels} series={[{ name: "Créditos", values: d.map((p) => p.credits), color: SERIES[1] }]} /></div>
-        <div className="card p-5"><LineChart title="Receita por dia" labels={labels} series={[{ name: "Receita", values: d.map((p) => p.revenue_cents / 100), color: SERIES[2] }]} format={(n) => `R$${n >= 1000 ? `${(n / 1000).toFixed(1)}k` : n.toFixed(0)}`} /></div>
+        <div className="card p-5"><LineChart title="Receita por dia" labels={labels} series={[{ name: "Receita", values: d.map((p) => p.revenue_cents / 100), color: SERIES[2] }]} format="currency" /></div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

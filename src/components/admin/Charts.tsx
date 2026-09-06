@@ -21,7 +21,13 @@ function niceMax(v: number) {
 const fmtNum = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : String(Math.round(n)));
 
 /** Linhas de 2px, marcador ≥8px com anel de superfície, crosshair + tooltip. Um eixo só. */
-export function LineChart({ labels, series, height = 200, format = fmtNum, title }: { labels: string[]; series: Series[]; height?: number; format?: (n: number) => string; title?: string }) {
+const FORMATTERS: Record<"number" | "currency", (n: number) => string> = {
+  number: fmtNum,
+  currency: (n) => `R$${n >= 1000 ? `${(n / 1000).toFixed(1)}k` : n.toFixed(0)}`,
+};
+
+export function LineChart({ labels, series, height = 200, format = "number", title }: { labels: string[]; series: Series[]; height?: number; format?: "number" | "currency"; title?: string }) {
+  const fmt = FORMATTERS[format];
   const [hover, setHover] = useState<number | null>(null);
   const W = 640, H = height, padL = 44, padR = 12, padT = 12, padB = 26;
   const max = niceMax(Math.max(1, ...series.flatMap((s) => s.values)));
@@ -53,7 +59,7 @@ export function LineChart({ labels, series, height = 200, format = fmtNum, title
           {ticks.map((t) => (
             <g key={t}>
               <line x1={padL} x2={W - padR} y1={y(t)} y2={y(t)} stroke={GRID} strokeWidth={1} />
-              <text x={padL - 6} y={y(t) + 4} textAnchor="end" fontSize={10} fill={TEXT_3}>{format(t)}</text>
+              <text x={padL - 6} y={y(t) + 4} textAnchor="end" fontSize={10} fill={TEXT_3}>{fmt(t)}</text>
             </g>
           ))}
           {labels.map((l, i) => (i % labelEvery === 0 || i === n - 1 ? <text key={i} x={x(i)} y={H - 8} textAnchor="middle" fontSize={10} fill={TEXT_3}>{l}</text> : null))}
@@ -74,7 +80,7 @@ export function LineChart({ labels, series, height = 200, format = fmtNum, title
           <div className="pointer-events-none absolute top-1 rounded-lg border border-line bg-bg px-3 py-2 text-xs shadow-xl" style={{ left: `${Math.min(80, Math.max(0, (x(hover) / W) * 100))}%` }}>
             <div className="font-bold text-fg">{labels[hover]}</div>
             {series.map((s, si) => (
-              <div key={s.name} className="flex items-center gap-2 text-fg-2"><span className="inline-block h-2 w-2 rounded-full" style={{ background: s.color ?? SERIES[si] }} />{s.name}: <b className="text-fg">{format(s.values[hover] ?? 0)}</b></div>
+              <div key={s.name} className="flex items-center gap-2 text-fg-2"><span className="inline-block h-2 w-2 rounded-full" style={{ background: s.color ?? SERIES[si] }} />{s.name}: <b className="text-fg">{fmt(s.values[hover] ?? 0)}</b></div>
             ))}
           </div>
         ) : null}
