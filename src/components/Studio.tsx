@@ -60,7 +60,7 @@ export function Studio({ initial, templates, models, profile, canDownload }: { i
   }
 
   const save = useCallback(async () => {
-    const body = { title: c.title, template_id: c.template_id, aspect: c.aspect, slides: c.slides, brand_overrides: c.brand_overrides, instagram_handle: c.instagram_handle, cover_scene: c.cover_scene, caption: c.caption };
+    const body = { title: c.title, template_id: c.template_id, aspect: c.aspect, slides: c.slides, brand_overrides: c.brand_overrides, instagram_handle: c.instagram_handle, cover_scene: c.cover_scene, caption: c.caption, seamless: !!c.seamless };
     const data = await call("save", () => fetch(`/api/carousels/${c.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }));
     if (data) setMsg({ kind: "ok", text: t.studio.saved });
     return !!data;
@@ -122,7 +122,7 @@ export function Studio({ initial, templates, models, profile, canDownload }: { i
 
         <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div className="overflow-hidden rounded-2xl border border-line shadow-2xl shadow-black/50">
-            {slide ? <SlidePreview template={template} slide={slide} index={active} total={c.slides.length} aspect={c.aspect} style={style} coverImage={coverUrl} authorName={profile.full_name} avatarUrl={profile.avatar_url} /> : null}
+            {slide ? <SlidePreview template={template} slide={slide} index={active} total={c.slides.length} aspect={c.aspect} style={style} coverImage={coverUrl} authorName={profile.full_name} avatarUrl={profile.avatar_url} seamless={!!c.seamless} carouselTitle={c.title} /> : null}
           </div>
           <div className="card flex flex-col gap-3 p-4">
             <div className="text-xs font-bold uppercase tracking-wider text-fg-3">{t.studio.slides} · {active + 1}/{c.slides.length}</div>
@@ -150,7 +150,7 @@ export function Studio({ initial, templates, models, profile, canDownload }: { i
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={c.renders[i].url} alt="" className="w-full" />
               ) : (
-                <SlidePreview template={template} slide={s} index={i} total={c.slides.length} aspect={c.aspect} style={style} coverImage={coverUrl} authorName={profile.full_name} avatarUrl={profile.avatar_url} />
+                <SlidePreview template={template} slide={s} index={i} total={c.slides.length} aspect={c.aspect} style={style} coverImage={coverUrl} authorName={profile.full_name} avatarUrl={profile.avatar_url} seamless={!!c.seamless} carouselTitle={c.title} />
               )}
             </button>
           ))}
@@ -193,6 +193,10 @@ export function Studio({ initial, templates, models, profile, canDownload }: { i
             <Field label={t.create.aspect}>
               <div className="flex gap-2">{(["4:5", "1:1"] as Aspect[]).map((a) => <button key={a} onClick={() => update({ aspect: a })} className={clsx("btn btn-sm flex-1", c.aspect === a ? "btn-primary" : "btn-ghost")}>{a}</button>)}</div>
             </Field>
+            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-line p-3">
+              <input type="checkbox" className="h-5 w-5 accent-lime" checked={!!c.seamless} onChange={(e) => update({ seamless: e.target.checked })} />
+              <div><div className="text-sm font-bold">{t.create.seamless}</div><div className="text-xs text-fg-2">{t.create.seamlessDesc}</div></div>
+            </label>
             <Field label={t.create.handle}><input className="input" value={c.instagram_handle ?? ""} onChange={(e) => update({ instagram_handle: e.target.value.replace(/^@/, "") || null })} /></Field>
             {models.length ? (
               <Field label={t.create.brandModel}>

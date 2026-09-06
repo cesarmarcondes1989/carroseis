@@ -85,6 +85,7 @@ export function buildMcpServer(profile: Profile) {
         capa: z.enum(["ia", "propria", "nenhuma"]).optional().describe("'ia' = capa por IA (cobrada quando gerar). 'propria' = a pessoa sobe a foto no app. 'nenhuma' = só texto. PERGUNTE antes"),
         cena: z.string().optional().describe("Descrição da cena da capa por IA, em português. Só com capa:'ia'"),
         aspecto: z.enum(["4:5", "1:1"]).optional().describe("Formato. Padrão 4:5 (o do feed)"),
+        fundo_continuo: z.boolean().optional().describe("true = carrossel panorâmico: o fundo, as formas e a foto de capa atravessam todos os cards, quem arrasta vê a imagem continuar. Ofereça quando a pessoa pedir 'fundo infinito', 'contínuo' ou 'panorâmico'"),
         titulo: z.string().optional().describe("Nome do projeto em Meus Projetos. Opcional"),
       },
     },
@@ -113,6 +114,7 @@ export function buildMcpServer(profile: Profile) {
           brandModel: model ?? null,
           title: args.titulo ?? args.slides[0].titulo,
           topic: args.slides[0].titulo,
+          seamless: !!args.fundo_continuo,
         });
         const { data: fresh } = await adminClient().from("profiles").select("*").eq("id", profile.id).single();
         const rendered = await renderCarousel(created, (fresh as Profile) ?? profile);

@@ -80,6 +80,7 @@ export type Carousel = {
   brand_overrides: BrandOverrides | null;
   instagram_handle: string | null;
   renders: Render[];
+  seamless: boolean;
   credits_spent: number;
   error: string | null;
   created_at: string;

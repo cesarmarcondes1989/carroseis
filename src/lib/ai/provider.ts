@@ -29,7 +29,7 @@ export interface AIProvider {
   generateScript(req: ScriptRequest): Promise<ScriptResult>;
   suggest(req: SuggestRequest): Promise<SuggestResult>;
   /** Devolve PNG/JPEG em Buffer. */
-  generateCoverImage(scene: string, aspect: "4:5" | "1:1"): Promise<{ buffer: Buffer; mime: string }>;
+  generateCoverImage(scene: string, aspect: "4:5" | "1:1" | "wide"): Promise<{ buffer: Buffer; mime: string }>;
 }
 
 let cached: AIProvider | null = null;

@@ -24,6 +24,7 @@ const patch = z.object({
   cover_scene: z.string().max(600).nullable().optional(),
   cover_mode: z.enum(["ai", "own", "none"]).optional(),
   caption: z.string().max(3000).nullable().optional(),
+  seamless: z.boolean().optional(),
 });
 
 export async function GET(_req: Request, { params }: Ctx) {
@@ -41,7 +42,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
     const profile = await requireProfile();
     const carousel = await getOwnedCarousel((await params).id, profile);
     const body = patch.parse(await req.json());
-    const changesArt = body.slides || body.template_id || body.aspect || body.brand_overrides !== undefined || body.instagram_handle !== undefined || body.cover_mode;
+    const changesArt = body.slides || body.template_id || body.aspect || body.brand_overrides !== undefined || body.instagram_handle !== undefined || body.cover_mode || body.seamless !== undefined;
     const { data, error } = await adminClient()
       .from("carousels")
       .update({ ...body, ...(changesArt ? { renders: [], status: carousel.status === "ready" ? "draft" : carousel.status } : {}) })

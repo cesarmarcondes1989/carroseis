@@ -52,6 +52,10 @@ export type SlideProps = {
   coverImage?: string | null;
   authorName?: string | null;
   avatarUrl?: string | null;
+  /** Fundo contínuo: um panorama de largura w*total, cada card mostra a sua fatia. */
+  seamless?: boolean;
+  /** Título do carrossel, usado como texto fantasma no panorama. */
+  carouselTitle?: string | null;
 };
 
 const PAD = 80;
@@ -153,33 +157,80 @@ export function hexA(hex: string, a: number) {
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
 }
 
+/**
+ * Panorama que atravessa todos os cards: gradiente, formas, título fantasma e foto,
+ * desenhados nas coordenadas do card atual (deslocamento -index*w). Elementos que
+ * não tocam este card são descartados: o resvg aborta com máscaras totalmente fora
+ * da tela, então nada aqui pode ficar 100% fora do card.
+ */
+function Panorama({ style, index, total, w, h, image, title }: { style: ResolvedStyle; index: number; total: number; w: number; h: number; image?: string | null; title?: string | null }) {
+  const { palette, fontDisplay } = style;
+  const W = w * total;
+  const off = -index * w;
+  const light = isLight(palette.bg);
+  const visible = (x: number, width: number) => x + width > 0 && x < w;
+  const blobs = [
+    { x: 0.12, y: -0.25, r: 0.95, c: hexA(palette.accent, 0.22) },
+    { x: 0.47, y: 0.55, r: 1.1, c: hexA(palette.accent2 === palette.bg ? palette.accent : palette.accent2, light ? 0.35 : 0.5) },
+    { x: 0.78, y: -0.15, r: 0.8, c: hexA(palette.accent, 0.16) },
+    { x: 0.98, y: 0.6, r: 0.9, c: hexA(palette.fg, light ? 0.06 : 0.05) },
+  ]
+    .map((b) => ({ left: off + b.x * W - (b.r * h) / 2, top: b.y * h, size: b.r * h, c: b.c }))
+    .filter((b) => visible(b.left, b.size));
+  // gradiente do panorama inteiro, deslocado: cada card recebe o trecho dele
+  const gradient = `linear-gradient(100deg, ${palette.bg} 0%, ${palette.accent2} 55%, ${palette.bg} 100%)`;
+  const titleLeft = off + w * 0.35;
+  const titleSize = h * 0.36;
+  const titleWidth = (title?.length ?? 0) * titleSize * 0.62;
+  return (
+    <>
+      <div style={{ display: "flex", position: "absolute", top: 0, left: off, width: W, height: h, backgroundImage: gradient }} />
+      {image ? <img src={image} alt="" style={{ position: "absolute", top: 0, left: off, width: W, height: h, objectFit: "cover" }} /> : null}
+      {image ? <div style={{ display: "flex", position: "absolute", top: 0, left: 0, width: w, height: h, backgroundImage: `linear-gradient(180deg, ${hexA(palette.bg, 0.15)} 0%, ${hexA(palette.bg, 0.55)} 60%, ${hexA(palette.bg, 0.92)} 100%)` }} /> : null}
+      {!image ? blobs.map((b, i) => <div key={i} style={{ display: "flex", position: "absolute", left: b.left, top: b.top, width: b.size, height: b.size, borderRadius: 9999, backgroundColor: b.c }} />) : null}
+      {title && visible(titleLeft, titleWidth) ? (
+        <span style={{ position: "absolute", left: titleLeft, bottom: -h * 0.02, fontFamily: fontDisplay, fontSize: titleSize, fontWeight: 700, lineHeight: 1, whiteSpace: "nowrap", letterSpacing: -h * 0.012, color: palette.fg, opacity: light ? 0.05 : 0.06, textTransform: "uppercase" }}>{title}</span>
+      ) : null}
+    </>
+  );
+}
+
 export function SlideView(props: SlideProps) {
-  const { aspect } = props;
+  const { aspect, seamless } = props;
   const { w, h } = SIZES[aspect];
-  const root: CSSProperties = { display: "flex", width: w, height: h, position: "relative", overflow: "hidden" };
-  switch (props.template.layout) {
-    case "social":
-      return <div style={root}>{Social(props)}</div>;
-    case "insider":
-      return <div style={root}>{Insider(props)}</div>;
-    case "identity":
-      return <div style={root}>{Identity(props)}</div>;
-    case "fulltext":
-      return <div style={root}>{FullText(props)}</div>;
-    case "news":
-      return <div style={root}>{News(props)}</div>;
-    default:
-      return <div style={root}>{Niche(props)}</div>;
-  }
+  const root: CSSProperties = { display: "flex", width: w, height: h, position: "relative", overflow: "hidden", backgroundColor: props.style.palette.bg };
+  const pano = seamless ? <Panorama style={props.style} index={props.index} total={props.total} w={w} h={h} image={props.coverImage} title={props.carouselTitle} /> : null;
+  const layout = (() => {
+    switch (props.template.layout) {
+      case "social":
+        return Social(props);
+      case "insider":
+        return Insider(props);
+      case "identity":
+        return Identity(props);
+      case "fulltext":
+        return FullText(props);
+      case "news":
+        return News(props);
+      default:
+        return Niche(props);
+    }
+  })();
+  return (
+    <div style={root}>
+      {pano}
+      {layout}
+    </div>
+  );
 }
 
 /* ------------------------------------------------------------------ social */
-function Social({ slide, index, total, style, authorName, avatarUrl }: SlideProps) {
+function Social({ slide, index, total, style, authorName, avatarUrl, seamless }: SlideProps) {
   const { palette, fontBody, scale, handle } = style;
   const name = authorName || handle || "Seu nome";
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", backgroundColor: palette.bg, padding: PAD, justifyContent: "center" }}>
-      <div style={{ display: "flex", flexDirection: "column", backgroundColor: palette.accent2, borderRadius: 40, padding: 56, border: `2px solid ${hexA(palette.muted, 0.25)}` }}>
+    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", backgroundColor: seamless ? "transparent" : palette.bg, padding: PAD, justifyContent: "center" }}>
+      <div style={{ display: "flex", flexDirection: "column", backgroundColor: seamless ? hexA(palette.accent2, 0.85) : palette.accent2, borderRadius: 40, padding: 56, border: `2px solid ${hexA(palette.muted, 0.25)}` }}>
         <div style={{ display: "flex", alignItems: "center" }}>
           <Avatar name={name} url={avatarUrl} size={96} bg={palette.accent} fg="#fff" font={fontBody} />
           <div style={{ display: "flex", flexDirection: "column", marginLeft: 24 }}>
@@ -214,15 +265,15 @@ function Social({ slide, index, total, style, authorName, avatarUrl }: SlideProp
 }
 
 /* ----------------------------------------------------------------- insider */
-function Insider({ slide, index, total, style, coverImage }: SlideProps) {
+function Insider({ slide, index, total, style, coverImage, seamless }: SlideProps) {
   const { palette, fontDisplay, fontBody, scale, variant } = style;
   const bg = variant === "light" ? "#f7f7f5" : palette.bg;
   const fg = variant === "light" ? "#0a0a0a" : palette.fg;
   const muted = variant === "light" ? "#57534e" : palette.muted;
   const isCover = index === 0;
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", backgroundColor: bg, padding: PAD, justifyContent: "space-between" }}>
-      {isCover && coverImage ? <CoverImage src={coverImage} gradientTo={bg} strength={0.9} height="70%" /> : null}
+    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", backgroundColor: seamless ? "transparent" : bg, padding: PAD, justifyContent: "space-between" }}>
+      {isCover && coverImage && !seamless ? <CoverImage src={coverImage} gradientTo={bg} strength={0.9} height="70%" /> : null}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative" }}>
         <Pill text={slide.etiqueta || (isCover ? "Insider" : `${String(index + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`)} bg={palette.accent} fg="#0a0a0a" font={fontBody} />
         <span style={{ fontFamily: fontDisplay, fontSize: 40, color: muted, letterSpacing: 2 }}>{String(index + 1).padStart(2, "0")}</span>
@@ -244,7 +295,7 @@ function Insider({ slide, index, total, style, coverImage }: SlideProps) {
 }
 
 /* ---------------------------------------------------------------- identity */
-function Identity({ slide, index, total, style, coverImage, authorName, avatarUrl }: SlideProps) {
+function Identity({ slide, index, total, style, coverImage, authorName, avatarUrl, seamless }: SlideProps) {
   const { palette, fontDisplay, fontBody, scale, handle } = style;
   const name = authorName || (handle ? handle.replace(/^@/, "") : "Seu nome");
   const isCover = index === 0;
@@ -264,8 +315,8 @@ function Identity({ slide, index, total, style, coverImage, authorName, avatarUr
   );
   if (isCover) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", backgroundColor: palette.bg, padding: PAD, justifyContent: "space-between" }}>
-        {coverImage ? <CoverImage src={coverImage} gradientTo={palette.bg} strength={0.92} /> : (
+      <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", backgroundColor: seamless ? "transparent" : palette.bg, padding: PAD, justifyContent: "space-between" }}>
+        {seamless ? null : coverImage ? <CoverImage src={coverImage} gradientTo={palette.bg} strength={0.92} /> : (
           <div style={{ display: "flex", position: "absolute", top: 0, left: 0, width: "100%", height: "100%", backgroundImage: `linear-gradient(160deg, ${palette.accent2} 0%, ${palette.bg} 60%, ${hexA(palette.accent, 0.25)} 100%)` }} />
         )}
         <div style={{ display: "flex", position: "relative" }}>{chip}</div>
@@ -279,7 +330,7 @@ function Identity({ slide, index, total, style, coverImage, authorName, avatarUr
     );
   }
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", backgroundColor: palette.bg, padding: PAD, justifyContent: "space-between" }}>
+    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", backgroundColor: seamless ? "transparent" : palette.bg, padding: PAD, justifyContent: "space-between" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         {chip}
         <span style={{ fontFamily: fontDisplay, fontSize: 36, color: palette.muted, fontWeight: 700 }}>{`${index + 1}/${total}`}</span>
@@ -298,14 +349,14 @@ function Identity({ slide, index, total, style, coverImage, authorName, avatarUr
 }
 
 /* ---------------------------------------------------------------- fulltext */
-function FullText({ slide, index, total, style }: SlideProps) {
+function FullText({ slide, index, total, style, seamless }: SlideProps) {
   const { palette, fontDisplay, fontBody, scale } = style;
   const cycle = palette.cycle && palette.cycle.length ? palette.cycle : [palette.bg, palette.accent2];
-  const bg = cycle[index % cycle.length];
+  const bg = seamless ? palette.bg : cycle[index % cycle.length];
   const fg = isLight(bg) ? "#0a0a0a" : "#ffffff";
   const soft = isLight(bg) ? hexA("#000000", 0.55) : hexA("#ffffff", 0.75);
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", backgroundColor: bg, padding: PAD, justifyContent: "space-between" }}>
+    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", backgroundColor: seamless ? "transparent" : bg, padding: PAD, justifyContent: "space-between" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontFamily: fontDisplay, fontSize: 64, color: fg, opacity: 0.35 }}>{String(index + 1).padStart(2, "0")}</span>
         {slide.etiqueta ? <Pill text={slide.etiqueta} bg={fg} fg={bg} font={fontBody} /> : null}
@@ -320,17 +371,18 @@ function FullText({ slide, index, total, style }: SlideProps) {
 }
 
 /* ------------------------------------------------------------------- niche */
-function Niche({ slide, index, total, style, coverImage }: SlideProps) {
+function Niche({ slide, index, total, style, coverImage, seamless }: SlideProps) {
   const { palette, fontDisplay, fontBody, scale } = style;
   const isCover = index === 0;
-  const isLast = index === total - 1 && total > 1;
+  // no fundo contínuo o CTA vira um card comum: o fundo sólido quebraria o panorama
+  const isLast = index === total - 1 && total > 1 && !seamless;
   if (isCover) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", backgroundColor: palette.bg, padding: PAD, justifyContent: "flex-end" }}>
-        {coverImage ? <CoverImage src={coverImage} gradientTo={palette.bg} strength={0.9} /> : (
+      <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", backgroundColor: seamless ? "transparent" : palette.bg, padding: PAD, justifyContent: "flex-end" }}>
+        {seamless ? null : coverImage ? <CoverImage src={coverImage} gradientTo={palette.bg} strength={0.9} /> : (
           <div style={{ display: "flex", position: "absolute", top: 0, left: 0, width: "100%", height: "100%", backgroundImage: `linear-gradient(145deg, ${palette.accent2} 0%, ${palette.bg} 55%, ${hexA(palette.accent, 0.35)} 100%)` }} />
         )}
-        {!coverImage ? <div style={{ display: "flex", position: "absolute", top: -200, right: -200, width: 640, height: 640, borderRadius: 999, backgroundColor: hexA(palette.accent, 0.18) }} /> : null}
+        {!coverImage && !seamless ? <div style={{ display: "flex", position: "absolute", top: -200, right: -200, width: 640, height: 640, borderRadius: 999, backgroundColor: hexA(palette.accent, 0.18) }} /> : null}
         <div style={{ display: "flex", flexDirection: "column", position: "relative" }}>
           <div style={{ display: "flex", marginBottom: 28 }}>
             <Pill text={slide.etiqueta || "Arraste ›"} bg={palette.accent} fg={isLight(palette.accent) ? "#0a0a0a" : "#ffffff"} font={fontBody} />
@@ -356,7 +408,7 @@ function Niche({ slide, index, total, style, coverImage }: SlideProps) {
     );
   }
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", backgroundColor: palette.bg, padding: PAD, justifyContent: "space-between" }}>
+    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", backgroundColor: seamless ? "transparent" : palette.bg, padding: PAD, justifyContent: "space-between" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center" }}>
           <div style={{ display: "flex", width: 72, height: 72, borderRadius: 20, backgroundColor: palette.accent, alignItems: "center", justifyContent: "center" }}>
@@ -377,13 +429,13 @@ function Niche({ slide, index, total, style, coverImage }: SlideProps) {
 }
 
 /* -------------------------------------------------------------------- news */
-function News({ slide, index, total, style, coverImage }: SlideProps) {
+function News({ slide, index, total, style, coverImage, seamless }: SlideProps) {
   const { palette, fontDisplay, fontBody, scale } = style;
   const isCover = index === 0;
   const tagFg = isLight(palette.accent) ? "#0a0a0a" : "#ffffff";
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", backgroundColor: palette.bg, padding: PAD, justifyContent: isCover ? "flex-end" : "space-between" }}>
-      {isCover && coverImage ? <CoverImage src={coverImage} gradientTo={palette.bg} strength={0.95} /> : null}
+    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", backgroundColor: seamless ? "transparent" : palette.bg, padding: PAD, justifyContent: isCover ? "flex-end" : "space-between" }}>
+      {isCover && coverImage && !seamless ? <CoverImage src={coverImage} gradientTo={palette.bg} strength={0.95} /> : null}
       {!isCover ? (
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center" }}>

@@ -32,11 +32,11 @@ export class OpenAIProvider implements AIProvider {
     return parseSuggest(res.choices[0]?.message?.content ?? "{}", req.templates.map((t) => t.id));
   }
 
-  async generateCoverImage(scene: string, aspect: "4:5" | "1:1") {
+  async generateCoverImage(scene: string, aspect: "4:5" | "1:1" | "wide") {
     const res = await this.client.images.generate({
       model: this.imageModel,
-      prompt: coverPrompt(scene, ""),
-      size: aspect === "1:1" ? "1024x1024" : "1024x1536",
+      prompt: coverPrompt(scene, aspect === "wide" ? "ultra-wide panoramic composition that reads well when sliced into vertical panels, subject spread across the full width" : ""),
+      size: aspect === "wide" ? "1536x1024" : aspect === "1:1" ? "1024x1024" : "1024x1536",
       quality: (process.env.OPENAI_IMAGE_QUALITY as "low" | "medium" | "high" | undefined) ?? "medium",
       n: 1,
     });

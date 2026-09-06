@@ -25,6 +25,7 @@ export function Creator({ templates, models, profile, initialTemplate, initialTo
   const [slidesCount, setSlidesCount] = useState(7);
   const [tone, setTone] = useState(initialTone && ["direto", "provocador", "didatico", "inspirador", "jornalistico"].includes(initialTone) ? initialTone : "direto");
   const [aspect, setAspect] = useState<Aspect>("4:5");
+  const [seamless, setSeamless] = useState(false);
   const [coverMode, setCoverMode] = useState<CoverMode>("none");
   const [coverScene, setCoverScene] = useState("");
   const [handle, setHandle] = useState(initialHandle || defaultModel?.instagram_handle || profile.instagram_handle || "");
@@ -46,7 +47,7 @@ export function Creator({ templates, models, profile, initialTemplate, initialTo
     setBusy(true);
     setError(null);
     try {
-      const fields: Record<string, string> = { templateId, source, topic, url, script, slidesCount: String(slidesCount), tone, aspect, coverMode: template.supports_ai_cover ? coverMode : coverMode === "own" ? "own" : "none", coverScene, handle, brandModelId: modelId };
+      const fields: Record<string, string> = { templateId, source, topic, url, script, slidesCount: String(slidesCount), tone, aspect, coverMode: template.supports_ai_cover ? coverMode : coverMode === "own" ? "own" : "none", coverScene, handle, brandModelId: modelId, seamless: String(seamless) };
       let res: Response;
       if (source === "pdf") {
         const fd = new FormData();
@@ -171,6 +172,10 @@ export function Creator({ templates, models, profile, initialTemplate, initialTo
             ))}
           </div>
           {coverMode === "ai" && template.supports_ai_cover ? <textarea className="input mt-3" placeholder={t.create.scenePlaceholder} value={coverScene} onChange={(e) => setCoverScene(e.target.value)} /> : null}
+          <label className="card mt-4 flex cursor-pointer items-center gap-3 p-4">
+            <input type="checkbox" className="h-5 w-5 accent-lime" checked={seamless} onChange={(e) => setSeamless(e.target.checked)} />
+            <div><div className="font-bold">{t.create.seamless}</div><div className="text-xs text-fg-2">{t.create.seamlessDesc}</div></div>
+          </label>
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <Field label={t.create.aspect}>
               <div className="flex gap-2">
@@ -197,8 +202,13 @@ export function Creator({ templates, models, profile, initialTemplate, initialTo
       <aside className="lg:sticky lg:top-8 lg:self-start">
         <div className="text-xs font-bold uppercase tracking-wider text-fg-3">{t.studio.preview}</div>
         <div className="mt-2 overflow-hidden rounded-2xl border border-line">
-          <SlidePreview template={template} slide={topic.trim() ? { titulo: topic.slice(0, 90), etiqueta: template.name } : sampleSlides(template, locale)[0]} index={0} total={slidesCount} aspect={aspect} style={style} authorName={profile.full_name} avatarUrl={profile.avatar_url} />
+          <SlidePreview template={template} slide={topic.trim() ? { titulo: topic.split(/\n/)[0].slice(0, 90), etiqueta: template.name } : sampleSlides(template, locale)[0]} index={0} total={slidesCount} aspect={aspect} style={style} authorName={profile.full_name} avatarUrl={profile.avatar_url} seamless={seamless} carouselTitle={topic.split(/\n/)[0] || template.name} />
         </div>
+        {seamless ? (
+          <div className="mt-2 flex gap-1 overflow-hidden rounded-xl border border-line">
+            {[0, 1, 2].map((i) => <div key={i} className="min-w-0 flex-1"><SlidePreview template={template} slide={{ titulo: `Card ${i + 2}`, texto: t.create.seamlessPreview }} index={i + 1} total={slidesCount} aspect={aspect} style={style} seamless carouselTitle={topic.split(/\n/)[0] || template.name} /></div>)}
+          </div>
+        ) : null}
       </aside>
     </div>
   );

@@ -21,6 +21,7 @@ const schema = z.object({
   coverScene: z.string().max(600).optional(),
   handle: z.string().max(60).optional(),
   brandModelId: z.string().uuid().optional().or(z.literal("")),
+  seamless: z.preprocess((v) => v === "true" || v === true, z.boolean()).default(false),
 });
 
 /** POST multipart/form-data ou JSON. Cria o carrossel (e escreve o roteiro com IA quando preciso). */
@@ -82,6 +83,7 @@ export async function POST(req: Request) {
       handle: input.handle,
       brandModel,
       title: slides?.[0]?.titulo ?? null,
+      seamless: input.seamless,
     });
     return Response.json({ carousel });
   } catch (e) {

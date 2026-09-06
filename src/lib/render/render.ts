@@ -13,6 +13,8 @@ export type RenderInput = {
   coverImage?: string | null; // data URL ou URL pública
   authorName?: string | null;
   avatarUrl?: string | null;
+  seamless?: boolean;
+  title?: string | null;
 };
 
 export async function renderSlidePng(input: RenderInput, index: number): Promise<Buffer> {
@@ -25,9 +27,11 @@ export async function renderSlidePng(input: RenderInput, index: number): Promise
     total: input.slides.length,
     aspect: input.aspect,
     style: input.style,
-    coverImage: index === 0 ? input.coverImage : null,
+    coverImage: index === 0 || input.seamless ? input.coverImage : null,
     authorName: input.authorName,
     avatarUrl: input.avatarUrl,
+    seamless: input.seamless,
+    carouselTitle: input.title,
   });
   const svg = await satori(element, { width: w, height: h, fonts });
   const png = new Resvg(svg, { fitTo: { mode: "width", value: w }, font: { loadSystemFonts: false } }).render().asPng();

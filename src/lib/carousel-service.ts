@@ -40,6 +40,7 @@ export type CreateInput = {
   handle?: string | null;
   brandModel?: BrandModel | null;
   title?: string | null;
+  seamless?: boolean;
 };
 
 /** Cria o registro do carrossel; escreve o roteiro com IA quando não veio pronto. Cobra créditos. */
@@ -66,6 +67,7 @@ export async function createCarousel(input: CreateInput): Promise<Carousel> {
       cover_mode: coverMode,
       cover_scene: input.coverScene ?? null,
       brand_overrides: overridesFromModel(input.brandModel),
+      seamless: !!input.seamless,
       instagram_handle: input.handle?.replace(/^@/, "") || input.brandModel?.instagram_handle || input.profile.instagram_handle || null,
     })
     .select("*")
@@ -149,7 +151,7 @@ export async function generateCover(carousel: Carousel, profile: Profile, scene?
   }
   try {
     const ai = await getAI();
-    const { buffer, mime } = await ai.generateCoverImage(finalScene, carousel.aspect);
+    const { buffer, mime } = await ai.generateCoverImage(finalScene, carousel.seamless ? "wide" : carousel.aspect);
     const path = `${carousel.user_id}/${carousel.id}/cover-${Date.now()}.png`;
     const { error } = await db.storage.from("carousels").upload(path, buffer, { contentType: mime, upsert: true });
     if (error) throw error;
@@ -176,7 +178,7 @@ export async function renderCarousel(carousel: Carousel, profile?: Profile | nul
     const style = resolveStyle(template, carousel.brand_overrides, carousel.instagram_handle);
     const coverImage = carousel.cover_image_path ? await toDataUrl(publicStorageUrl(carousel.cover_image_path)) : null;
     const avatarUrl = profile?.avatar_url ? await toDataUrl(profile.avatar_url) : null;
-    const pngs = await renderAll({ template, style, slides: carousel.slides, aspect: carousel.aspect, coverImage, authorName: profile?.full_name ?? null, avatarUrl });
+    const pngs = await renderAll({ template, style, slides: carousel.slides, aspect: carousel.aspect, coverImage, authorName: profile?.full_name ?? null, avatarUrl, seamless: carousel.seamless, title: carousel.title });
     const stamp = Date.now();
     const renders: Render[] = [];
     for (let i = 0; i < pngs.length; i++) {

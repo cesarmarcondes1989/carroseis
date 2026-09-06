@@ -46,6 +46,10 @@ Rode `supabase/migrations/0003_onboarding.sql`. Conta nova cai em `/app/comecar`
 
 No estúdio, os cards prontos aparecem num painel de download: no celular, "Salvar no celular" usa a Web Share API e abre a folha nativa (Salvar imagens, ou mandar direto pro Instagram, que monta o carrossel na ordem); também dá pra salvar card por card. No desktop, download individual ou ZIP. Cada card é servido por `/api/carousels/[id]/slide/[n]` no mesmo domínio (exige plano, igual ao ZIP).
 
+## Fundo contínuo (carrossel infinito)
+
+Rode `supabase/migrations/0004_seamless.sql`. Com a opção ligada (criador, estúdio ou `fundo_continuo` no MCP), o renderizador pinta um panorama de largura `1080 × cards` e cada card mostra a sua fatia: gradiente, formas, título fantasma e a foto de capa atravessam as bordas. Capa por IA nesse modo sai em paisagem (1536×1024). Pra conferir a continuidade localmente: `npx tsx scripts/strip.ts <template> 4x5` monta os cards lado a lado.
+
 ## Painel admin (`/admin`)
 
 Rode também `supabase/migrations/0002_admin.sql` (ou `supabase db push`). Ele cria auditoria, banimento, estatísticas agregadas e a proteção da **conta dona**.

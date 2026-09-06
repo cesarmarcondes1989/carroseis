@@ -37,7 +37,7 @@ export class AnthropicProvider implements AIProvider {
     return parseSuggest(text, req.templates.map((t) => t.id));
   }
 
-  generateCoverImage(scene: string, aspect: "4:5" | "1:1") {
+  generateCoverImage(scene: string, aspect: "4:5" | "1:1" | "wide") {
     return this.images.generateCoverImage(scene, aspect);
   }
 }
