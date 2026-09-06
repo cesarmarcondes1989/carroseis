@@ -1,12 +1,12 @@
 "use client";
 import { clsx } from "clsx";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n/client";
 import { resolveStyle } from "@/lib/render/Slide";
 import { FONT_NAMES, getTemplate } from "@/lib/templates/registry";
 import { CREDIT_COST, type Aspect, type BrandModel, type BrandOverrides, type Carousel, type Profile, type Slide, type Template } from "@/lib/types";
+import { DownloadPanel } from "./DownloadPanel";
 import { SlidePreview } from "./SlidePreview";
 import { Alert, CopyButton, Field, Spinner } from "./ui";
 
@@ -160,16 +160,11 @@ export function Studio({ initial, templates, models, profile, canDownload }: { i
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button onClick={render} disabled={!!busy} className="btn btn-primary">{busy === "render" ? <><Spinner /> {t.studio.rendering}</> : `🎨 ${t.studio.render}`}</button>
-          {c.renders?.length ? (
-            canDownload ? (
-              <a href={`/api/carousels/${c.id}/download`} className="btn btn-ghost">⬇ {t.studio.download}</a>
-            ) : (
-              <Link href="/app/creditos" className="btn btn-ghost">🔒 {t.studio.downloadLocked}</Link>
-            )
-          ) : null}
           <button onClick={() => call("rewrite", () => fetch(`/api/carousels/${c.id}/rewrite`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }))} disabled={!!busy} className="btn btn-ghost">{busy === "rewrite" ? <Spinner /> : `✨ ${t.studio.regenerate}`}</button>
           <button onClick={remove} className="btn btn-danger btn-sm ml-auto">{t.common.delete}</button>
         </div>
+
+        <DownloadPanel carousel={c} canDownload={canDownload} />
 
         {c.caption ? (
           <div className="card mt-6 p-4">

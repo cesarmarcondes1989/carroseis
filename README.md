@@ -40,6 +40,12 @@ Gerador de carrosséis para Instagram com IA. Você escolhe o template e diz o t
 
 Conta nova ganha 30 créditos. A conta admin (`contato@cesar-marcondes.com`) tem saldo ilimitado e acesso ao `/admin`.
 
+## Onboarding e download no celular
+
+Rode `supabase/migrations/0003_onboarding.sql`. Conta nova cai em `/app/comecar`: 3 perguntas (nicho, objetivo, tom) e @ opcional, pulável. A IA escolhe o template e propõe 3 temas com botão "Criar esse" que já abre o criador preenchido. Quem já tinha conta não passa por isso.
+
+No estúdio, os cards prontos aparecem num painel de download: no celular, "Salvar no celular" usa a Web Share API e abre a folha nativa (Salvar imagens, ou mandar direto pro Instagram, que monta o carrossel na ordem); também dá pra salvar card por card. No desktop, download individual ou ZIP. Cada card é servido por `/api/carousels/[id]/slide/[n]` no mesmo domínio (exige plano, igual ao ZIP).
+
 ## Painel admin (`/admin`)
 
 Rode também `supabase/migrations/0002_admin.sql` (ou `supabase db push`). Ele cria auditoria, banimento, estatísticas agregadas e a proteção da **conta dona**.

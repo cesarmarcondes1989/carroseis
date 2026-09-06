@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getDict } from "@/lib/i18n/server";
 import { getSession } from "@/lib/supabase/server";
 import { listTemplates } from "@/lib/carousel-service";
@@ -12,6 +13,7 @@ export const dynamic = "force-dynamic";
 export default async function Projects() {
   const { t } = await getDict();
   const { supabase, profile } = await getSession();
+  if (profile && !profile.onboarded_at) redirect("/app/comecar");
   const [{ data }, templates] = await Promise.all([supabase.from("carousels").select("*").order("created_at", { ascending: false }).limit(60), listTemplates()]);
   const carousels = (data as Carousel[]) ?? [];
 

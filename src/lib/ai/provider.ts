@@ -21,9 +21,13 @@ export type ScriptResult = {
   coverScene: string;
 };
 
+export type SuggestRequest = { niche: string; goal: string; tone: string; locale: "pt-BR" | "en"; templates: { id: string; name: string; description: string }[] };
+export type SuggestResult = { templateId: string; topics: string[]; why: string };
+
 export interface AIProvider {
   name: string;
   generateScript(req: ScriptRequest): Promise<ScriptResult>;
+  suggest(req: SuggestRequest): Promise<SuggestResult>;
   /** Devolve PNG/JPEG em Buffer. */
   generateCoverImage(scene: string, aspect: "4:5" | "1:1"): Promise<{ buffer: Buffer; mime: string }>;
 }

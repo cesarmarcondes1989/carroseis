@@ -48,3 +48,27 @@ function clean(s: string) {
 export function coverPrompt(scene: string, templateHint: string) {
   return `Editorial photograph for an Instagram carousel cover. Scene: ${scene}. Context: ${templateHint}. Cinematic lighting, shallow depth of field, high detail, natural colors, plenty of negative space in the lower third for a headline. Absolutely no text, letters, watermarks or logos in the image.`;
 }
+
+export function suggestPrompt(req: import("./provider").SuggestRequest) {
+  const lang = req.locale === "en" ? "English" : "Português do Brasil";
+  return `Você é estrategista de conteúdo para Instagram. Responda em ${lang}.
+A pessoa acabou de entrar no app e respondeu:
+- Nicho: ${req.niche}
+- Objetivo principal: ${req.goal}
+- Jeito de falar com o público: ${req.tone}
+
+Templates disponíveis (id: nome, pra que serve):
+${req.templates.map((t) => `- ${t.id}: ${t.name}. ${t.description}`).join("\n")}
+
+Escolha o template que mais combina com o nicho e o objetivo (use exatamente um id da lista) e proponha 3 temas de carrossel prontos pra postar essa semana: específicos, com gancho, sem travessão, até 12 palavras cada. Explique a escolha em uma frase curta e direta.
+Responda SOMENTE com JSON: {"templateId": string, "topics": [string, string, string], "why": string}`;
+}
+
+export function parseSuggest(raw: string, validIds: string[]): import("./provider").SuggestResult {
+  const json = raw.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "");
+  const data = JSON.parse(json) as Partial<import("./provider").SuggestResult>;
+  const templateId = validIds.includes(String(data.templateId)) ? String(data.templateId) : validIds[0];
+  const topics = (data.topics ?? []).map((t) => clean(String(t))).filter(Boolean).slice(0, 3);
+  if (topics.length < 3) throw new Error("A IA não devolveu 3 temas.");
+  return { templateId, topics, why: clean(data.why ?? "") };
+}

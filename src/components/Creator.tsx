@@ -11,22 +11,22 @@ import { Alert, Field, Spinner } from "./ui";
 
 type Source = "topic" | "url" | "youtube" | "pdf" | "script";
 
-export function Creator({ templates, models, profile, initialTemplate }: { templates: Template[]; models: BrandModel[]; profile: Profile; initialTemplate?: string }) {
+export function Creator({ templates, models, profile, initialTemplate, initialTopic, initialTone, initialHandle }: { templates: Template[]; models: BrandModel[]; profile: Profile; initialTemplate?: string; initialTopic?: string; initialTone?: string; initialHandle?: string }) {
   const { t, locale } = useI18n();
   const router = useRouter();
   const defaultModel = models.find((m) => m.is_default);
   const [templateId, setTemplateId] = useState(initialTemplate && templates.some((x) => x.id === initialTemplate) ? initialTemplate : defaultModel?.template_id ?? templates[0]?.id);
   const [source, setSource] = useState<Source>("topic");
-  const [topic, setTopic] = useState("");
+  const [topic, setTopic] = useState(initialTopic ?? "");
   const [url, setUrl] = useState("");
   const [script, setScript] = useState("");
   const [pdf, setPdf] = useState<File | null>(null);
   const [slidesCount, setSlidesCount] = useState(7);
-  const [tone, setTone] = useState("direto");
+  const [tone, setTone] = useState(initialTone && ["direto", "provocador", "didatico", "inspirador", "jornalistico"].includes(initialTone) ? initialTone : "direto");
   const [aspect, setAspect] = useState<Aspect>("4:5");
   const [coverMode, setCoverMode] = useState<CoverMode>("none");
   const [coverScene, setCoverScene] = useState("");
-  const [handle, setHandle] = useState(defaultModel?.instagram_handle ?? profile.instagram_handle ?? "");
+  const [handle, setHandle] = useState(initialHandle || defaultModel?.instagram_handle || profile.instagram_handle || "");
   const [modelId, setModelId] = useState(defaultModel?.id ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

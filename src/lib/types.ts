@@ -102,7 +102,18 @@ export type Profile = {
   is_banned: boolean;
   banned_reason: string | null;
   admin_notes: string | null;
+  onboarded_at: string | null;
+  onboarding: OnboardingAnswers | null;
   created_at: string;
+};
+
+export type OnboardingAnswers = {
+  niche: string;
+  goal: string;
+  tone: string;
+  handle?: string | null;
+  templateId?: string;
+  topics?: string[];
 };
 
 export type Plan = {
