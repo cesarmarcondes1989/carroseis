@@ -47,7 +47,8 @@ export default async function Projects() {
                   )}
                 </div>
                 <div className="mt-2 px-1">
-                  <div className="truncate text-sm font-bold">{c.title}</div>
+                  {c.series_id ? <div className="truncate text-[10px] font-bold uppercase tracking-wider text-lime">⚡ {c.series_name} · {c.series_index}/{c.series_total}</div> : null}
+                  <div className="truncate text-sm font-bold">{c.series_id ? c.slides?.[0]?.titulo ?? c.title : c.title}</div>
                   <div className="flex items-center justify-between text-xs text-fg-3">
                     <span>{tpl.name}</span>
                     <span className={c.status === "ready" ? "text-ok" : c.status === "error" ? "text-danger" : ""}>{t.app.status[c.status]}</span>

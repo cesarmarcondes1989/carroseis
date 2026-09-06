@@ -8,6 +8,7 @@ import { resolveStyle } from "@/lib/render/Slide";
 import { FONT_NAMES, pickTemplate } from "@/lib/templates/registry";
 import { CREDIT_COST, type Aspect, type BrandModel, type BrandOverrides, type Carousel, type Profile, type Slide, type Template } from "@/lib/types";
 import { DownloadPanel } from "./DownloadPanel";
+import { SaveScore } from "./SaveScore";
 import { SlidePreview } from "./SlidePreview";
 import { Alert, CopyButton, Field, Spinner } from "./ui";
 
@@ -129,7 +130,10 @@ export function Studio({ initial, templates, models, profile, canDownload, canEd
       {/* Coluna esquerda: preview + filmstrip */}
       <div className="min-w-0">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <input className="min-w-0 flex-1 bg-transparent font-display text-2xl font-bold outline-none" value={c.title} onChange={(e) => update({ title: e.target.value })} />
+          <div className="min-w-0 flex-1">
+            {c.series_id ? <div className="text-[11px] font-bold uppercase tracking-wider text-lime">⚡ {c.series_name} · {t.series.episode} {c.series_index}/{c.series_total}</div> : null}
+            <input className="w-full bg-transparent font-display text-2xl font-bold outline-none" value={c.title} onChange={(e) => update({ title: e.target.value })} />
+          </div>
           <div className="flex items-center gap-2">
             <span className={clsx("pill", c.status === "ready" ? "bg-ok/15 text-ok" : c.status === "error" ? "bg-danger/15 text-danger" : "bg-bg-3 text-fg-2")}>{t.app.status[c.status]}</span>
             {dirty || busy === "save" ? <span className="text-xs text-fg-3">{busy === "save" ? t.common.loading : "•"}</span> : null}
@@ -172,6 +176,7 @@ export function Studio({ initial, templates, models, profile, canDownload, canEd
           ))}
         </div>
 
+        <div className="mt-4"><SaveScore slides={c.slides} compact /></div>
         {msg ? <div className="mt-4"><Alert kind={msg.kind}>{msg.text}</Alert></div> : null}
 
         <div className="mt-4 flex flex-wrap items-center gap-3">

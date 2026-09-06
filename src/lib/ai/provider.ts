@@ -11,7 +11,12 @@ export type ScriptRequest = {
   locale: "pt-BR" | "en";
   handle?: string | null;
   highlightWords?: boolean;
+  /** Quando o carrossel faz parte de uma série: posição, o que veio antes e o que vem depois. */
+  seriesContext?: string | null;
 };
+
+export type SeriesRequest = { topic: string; count: number; tone: string; locale: "pt-BR" | "en"; templateName: string; templateHint: string; handle?: string | null; sourceText?: string | null };
+export type SeriesPlan = { name: string; parts: { title: string; angle: string; hook: string }[] };
 
 export type ScriptResult = {
   title: string;
@@ -39,6 +44,7 @@ export interface AIProvider {
   name: string;
   generateScript(req: ScriptRequest): Promise<ScriptResult>;
   suggest(req: SuggestRequest): Promise<SuggestResult>;
+  planSeries(req: SeriesRequest): Promise<SeriesPlan>;
   designAgent(req: DesignRequest): Promise<DesignResult>;
   /** Devolve PNG/JPEG em Buffer. */
   generateCoverImage(scene: string, aspect: "4:5" | "1:1" | "wide"): Promise<{ buffer: Buffer; mime: string }>;

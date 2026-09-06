@@ -1,7 +1,8 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import { adminClient, publicStorageUrl } from "@/lib/supabase/admin";
 import { getAI } from "@/lib/ai/provider";
-import { consumeCredits, grantCredits, logUsage } from "@/lib/credits";
+import { consumeCredits, grantCredits, InsufficientCredits, logUsage } from "@/lib/credits";
 import { renderAll, toDataUrl } from "@/lib/render/render";
 import { resolveStyle } from "@/lib/render/Slide";
 import { listTemplates, resolveTemplateId, templateForCarousel } from "@/lib/templates/custom";
@@ -37,6 +38,7 @@ export type CreateInput = {
   brandModel?: BrandModel | null;
   title?: string | null;
   seamless?: boolean;
+  series?: { id: string; name: string; index: number; total: number; context: string } | null;
 };
 
 /** Cria o registro do carrossel; escreve o roteiro com IA quando não veio pronto. Cobra créditos. */
@@ -64,6 +66,10 @@ export async function createCarousel(input: CreateInput): Promise<Carousel> {
       cover_scene: input.coverScene ?? null,
       brand_overrides: overridesFromModel(input.brandModel),
       seamless: !!input.seamless,
+      series_id: input.series?.id ?? null,
+      series_name: input.series?.name ?? null,
+      series_index: input.series?.index ?? null,
+      series_total: input.series?.total ?? null,
       instagram_handle: input.handle?.replace(/^@/, "") || input.brandModel?.instagram_handle || input.profile.instagram_handle || null,
     })
     .select("*")
@@ -89,6 +95,7 @@ export async function createCarousel(input: CreateInput): Promise<Carousel> {
       locale: input.locale ?? "pt-BR",
       handle: carousel.instagram_handle,
       highlightWords: template.layout === "news" || template.layout === "niche",
+      seriesContext: input.series?.context ?? null,
     });
     const { data: updated } = await db
       .from("carousels")
@@ -196,4 +203,53 @@ export async function renderCarousel(carousel: Carousel, profile?: Profile | nul
 export function appUrl(path = "") {
   const base = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
   return `${base}${path}`;
+}
+
+export type SeriesInput = Omit<CreateInput, "slides" | "series" | "title" | "topic" | "source"> & { topic: string; count: number; source?: CarouselSource };
+
+/**
+ * Série: a IA planeja N episódios encadeados e cada um vira um carrossel (roteiro por IA, cobrado por carrossel).
+ * Os episódios são criados em paralelo; o que falhar é estornado individualmente pelo createCarousel.
+ */
+export async function createSeries(input: SeriesInput): Promise<{ id: string; name: string; carousels: Carousel[]; failed: { title: string; error: string }[] }> {
+  const count = Math.max(2, Math.min(7, input.count));
+  const perCarousel = CREDIT_COST.carousel + CREDIT_COST.aiScript;
+  if (!input.profile.unlimited_credits && input.profile.credits < perCarousel * count) throw new InsufficientCredits();
+  const { template } = await resolveTemplateId(input.templateId, input.profile.id);
+  const ai = await getAI();
+  const plan = await ai.planSeries({ topic: input.topic, count, tone: input.tone ?? "direto", locale: input.locale ?? "pt-BR", templateName: template.name, templateHint: template.description, handle: input.handle ?? null, sourceText: input.sourceInput ?? null });
+  const id = randomUUID();
+  const total = plan.parts.length;
+  await logUsage(input.profile.id, "series.create", { topic: input.topic, count: total, template: template.id });
+
+  const results = await Promise.allSettled(
+    plan.parts.map((part, i) => {
+      const prev = plan.parts[i - 1];
+      const next = plan.parts[i + 1];
+      const context = [
+        `Série "${plan.name}", episódio ${i + 1} de ${total}.`,
+        `Este episódio: ${part.title}. ${part.angle}`,
+        prev ? `Episódio anterior (${i}): ${prev.title}. ${prev.angle}` : "É o primeiro episódio: apresente a série em uma frase na capa ou no primeiro card do meio.",
+        next ? `Próximo episódio (${i + 2}): ${next.title}. Gancho sugerido: ${next.hook}` : "É o último episódio: feche a série e peça pra salvar a série inteira.",
+      ].join("\n");
+      return createCarousel({
+        ...input,
+        source: input.source ?? "topic",
+        topic: part.title,
+        sourceInput: input.sourceInput ?? null,
+        title: `${plan.name} · ${i + 1}/${total}: ${part.title}`,
+        slides: null,
+        series: { id, name: plan.name, index: i + 1, total, context },
+      });
+    }),
+  );
+  const carousels: Carousel[] = [];
+  const failed: { title: string; error: string }[] = [];
+  results.forEach((r, i) => {
+    if (r.status === "fulfilled") carousels.push(r.value);
+    else failed.push({ title: plan.parts[i].title, error: r.reason instanceof Error ? r.reason.message : String(r.reason) });
+  });
+  if (!carousels.length) throw new Error(failed[0]?.error ?? "A série não foi criada.");
+  carousels.sort((a, b) => (a.series_index ?? 0) - (b.series_index ?? 0));
+  return { id, name: plan.name, carousels, failed };
 }

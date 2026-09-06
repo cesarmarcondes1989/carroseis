@@ -1,15 +1,16 @@
 import "server-only";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { saveScore } from "@/lib/score";
 import { CREDIT_COST, type Profile } from "@/lib/types";
 import { adminClient } from "@/lib/supabase/admin";
 import { InsufficientCredits, planActive } from "@/lib/credits";
-import { appUrl, createCarousel, listBrandModels, renderCarousel } from "@/lib/carousel-service";
+import { appUrl, createCarousel, createSeries, listBrandModels, renderCarousel } from "@/lib/carousel-service";
 import { listTemplatesFor } from "@/lib/templates/custom";
 
 const INSTRUCTIONS = `O CarrosseisIA transforma um roteiro escrito em um carrossel pronto pro Instagram.
 
-Fluxo: 1) chame listar_modelos e listar_templates; 2) escreva o roteiro; 3) PERGUNTE as duas coisas abaixo; 4) chame criar_carrossel; 5) entregue o link.
+Fluxo: 1) chame listar_modelos e listar_templates; 2) escreva o roteiro; 3) PERGUNTE as duas coisas abaixo; 4) chame criar_carrossel; 5) entregue o link. Se a pessoa quer vários carrosséis sobre um tema (série, semana de conteúdo), use criar_serie: o app planeja e escreve os episódios.\n\nROTEIRO QUE É SALVO: capa até 8 palavras (número, pergunta ou promessa); cada card do meio com UMA ideia, título até 8 palavras e texto de 1 a 2 frases (até 20 palavras no card); 7 a 10 cards; último card pede explicitamente pra SALVAR e mandar pra alguém. O app devolve um Score de Save de 0 a 100.
 
 MODELO SALVO (padrão visual da pessoa: cores, fontes, tamanho do texto e @). Chame listar_modelos UMA VEZ no começo. Ele vale por cima de qualquer template: o template dá o layout, o modelo dá a identidade.
 - Se existir um modelo PADRÃO, ele entra sozinho. Não pergunte cor, fonte nem tamanho, e não pergunte o @ se o modelo já tiver um.
@@ -122,7 +123,7 @@ export function buildMcpServer(profile: Profile) {
         const p = (fresh as Profile) ?? profile;
         const saldo = p.unlimited_credits ? "ilimitado" : String(p.credits);
         const lines = [
-          `Carrossel criado: ${rendered.title} (${rendered.slides.length} cards, template ${templateId}${model ? `, modelo ${model.name}` : ""}).`,
+          `Carrossel criado: ${rendered.title} (${rendered.slides.length} cards, template ${templateId}${model ? `, modelo ${model.name}` : ""}). Score de Save: ${saveScore(rendered.slides).score}/100.`,
           `Link pra ver, ajustar e baixar: ${link}`,
           coverMode === "ai" ? `A capa por IA será gerada quando a pessoa abrir o link e clicar em 'Gerar capa' (${CREDIT_COST.aiCover} créditos).` : coverMode === "own" ? "A pessoa sobe a foto da capa no link." : "",
           `Saldo: ${saldo} créditos.`,
@@ -133,6 +134,43 @@ export function buildMcpServer(profile: Profile) {
           return { isError: true, content: [{ type: "text", text: `Créditos insuficientes. Compre um plano em ${appUrl("/app/creditos")}.` }] };
         }
         return { isError: true, content: [{ type: "text", text: `Erro ao criar: ${e instanceof Error ? e.message : String(e)}` }] };
+      }
+    },
+  );
+
+  server.registerTool(
+    "criar_serie",
+    {
+      description: `Cria uma SÉRIE: de 2 a 7 carrosséis encadeados sobre um tema, planejados pela IA do app (cada episódio com ângulo próprio, sem repetição, com gancho pro próximo). Roteiro e arte de cada episódio são feitos pelo app. Custa ${CREDIT_COST.carousel + CREDIT_COST.aiScript} créditos por episódio. Use quando a pessoa pedir "uma série", "conteúdo pra semana", "vários carrosséis sobre". Pergunte antes o @ (opcional) e a quantidade de episódios.`,
+      inputSchema: {
+        tema: z.string().describe("Tema da série, com o máximo de contexto (público, objetivo, o que a pessoa vende)"),
+        episodios: z.number().int().min(2).max(7).optional().describe("Quantidade de carrosséis. Padrão 4"),
+        cards: z.number().int().min(4).max(10).optional().describe("Cards por carrossel. Padrão 8"),
+        template: z.string().optional().describe("id do template (veja listar_templates)"),
+        modelo: z.string().optional().describe("Nome do modelo salvo. Vazio = padrão"),
+        perfil: z.string().optional().describe("@ do Instagram, sem arroba"),
+        tom: z.enum(["direto", "provocador", "didatico", "inspirador", "jornalistico"]).optional(),
+        aspecto: z.enum(["4:5", "1:1"]).optional(),
+        fundo_continuo: z.boolean().optional(),
+      },
+    },
+    async (args) => {
+      const models = await listBrandModels(profile.id);
+      const model = args.modelo ? models.find((m) => m.name.toLowerCase() === args.modelo!.toLowerCase()) : models.find((m) => m.is_default);
+      if (args.modelo && !model) return { isError: true, content: [{ type: "text", text: `Não achei um modelo chamado '${args.modelo}'.` }] };
+      const templateId = args.template ?? model?.template_id;
+      if (!templateId) return { isError: true, content: [{ type: "text", text: "Falta o template. Chame listar_templates e escolha um id." }] };
+      try {
+        const series = await createSeries({ profile, templateId, topic: args.tema, count: args.episodios ?? 4, slidesCount: args.cards ?? 8, tone: args.tom ?? "direto", aspect: args.aspecto ?? "4:5", handle: args.perfil ?? null, brandModel: model ?? null, seamless: !!args.fundo_continuo, source: "mcp" });
+        const lines = [
+          `Série "${series.name}" criada com ${series.carousels.length} episódios. As imagens são geradas quando a pessoa abre cada link.`,
+          ...series.carousels.map((c) => `${c.series_index}/${c.series_total} · ${c.slides[0]?.titulo ?? c.title} (Score de Save ${saveScore(c.slides).score}/100): ${appUrl(`/app/c/${c.id}`)}`),
+          ...series.failed.map((f) => `FALHOU: ${f.title} (${f.error})`),
+        ];
+        return { content: [{ type: "text", text: lines.join("\n") }] };
+      } catch (e) {
+        if (e instanceof InsufficientCredits) return { isError: true, content: [{ type: "text", text: `Créditos insuficientes. Compre um plano em ${appUrl("/app/creditos")}.` }] };
+        return { isError: true, content: [{ type: "text", text: `Erro ao criar a série: ${e instanceof Error ? e.message : String(e)}` }] };
       }
     },
   );

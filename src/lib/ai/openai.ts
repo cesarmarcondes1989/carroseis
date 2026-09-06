@@ -1,7 +1,7 @@
 import "server-only";
 import OpenAI from "openai";
-import type { AIProvider, DesignRequest, DesignResult, ScriptRequest, ScriptResult, SuggestRequest, SuggestResult } from "./provider";
-import { coverPrompt, designPrompt, parseDesign, parseScript, parseSuggest, suggestPrompt, systemPrompt, userPrompt } from "./prompts";
+import type { AIProvider, DesignRequest, DesignResult, ScriptRequest, ScriptResult, SeriesPlan, SeriesRequest, SuggestRequest, SuggestResult } from "./provider";
+import { coverPrompt, designPrompt, parseDesign, parseScript, parseSeries, parseSuggest, seriesPrompt, suggestPrompt, systemPrompt, userPrompt } from "./prompts";
 
 export class OpenAIProvider implements AIProvider {
   name = "openai";
@@ -30,6 +30,16 @@ export class OpenAIProvider implements AIProvider {
       messages: [{ role: "user", content: suggestPrompt(req) }],
     });
     return parseSuggest(res.choices[0]?.message?.content ?? "{}", req.templates.map((t) => t.id));
+  }
+
+  async planSeries(req: SeriesRequest): Promise<SeriesPlan> {
+    const res = await this.client.chat.completions.create({
+      model: this.textModel,
+      temperature: 0.8,
+      response_format: { type: "json_object" },
+      messages: [{ role: "user", content: seriesPrompt(req) }],
+    });
+    return parseSeries(res.choices[0]?.message?.content ?? "{}", req.count);
   }
 
   async designAgent(req: DesignRequest): Promise<DesignResult> {

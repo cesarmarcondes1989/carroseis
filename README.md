@@ -58,6 +58,14 @@ Textos das camadas aceitam `{titulo}`, `{texto}`, `{etiqueta}`, `{handle}`, `{in
 
 A aba **Agente** manda uma instrução em linguagem natural (ex.: "capa mais ousada, título maior e etiqueta no canto") pro designer de IA (`designAgent` no provider, modelo `OPENAI_DESIGN_MODEL` ou o de texto); a resposta é validada com zod antes de entrar no editor e pode ser desfeita. Pra conferir os presets localmente através do Satori: `npx tsx scripts/layers-test.ts` gera PNGs em `/tmp/layers`.
 
+## Roteiro pra ser salvo e Score de Save
+
+O prompt do roteirista segue o que faz carrossel ser salvo e enviado por DM (o que o Instagram mais pesa em 2026): capa até 8 palavras com número, pergunta ou promessa; uma ideia por card, até 20 palavras no card; texto de apoio em todo card do meio; último card pedindo explicitamente pra salvar e mandar pra alguém. `src/lib/score.ts` calcula um **Score de Save** de 0 a 100, determinístico e sem IA, com checklist do que falta; aparece no estúdio (`SaveScore`) e na resposta do MCP.
+
+## Série de carrosséis
+
+Rode `supabase/migrations/0006_series.sql`. Em `/app/serie` (ou `criar_serie` no MCP) a IA planeja de 2 a 7 episódios encadeados sobre um tema (`planSeries` no provider: nome da série, ângulo de cada episódio sem sobreposição, gancho pro próximo) e cria todos os carrosséis em paralelo, cada um com roteiro próprio que recebe o contexto da série (`seriesContext`). Custa carrossel + roteiro por episódio; o que falhar é estornado individualmente. Os carrosséis guardam `series_id`, `series_name`, `series_index` e `series_total` e aparecem agrupados em Meus projetos.
+
 ## Imagens dos cards
 
 As imagens finais ficam salvas no Storage (bucket `carousels`) e no campo `renders` do carrossel, então não são geradas de novo a cada visita. O estúdio gera na primeira abertura sozinho; qualquer edição que muda a arte limpa `renders` e o botão vira "Regerar imagens".

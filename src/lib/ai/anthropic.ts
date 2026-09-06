@@ -1,7 +1,7 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
-import type { AIProvider, DesignRequest, DesignResult, ScriptRequest, ScriptResult, SuggestRequest, SuggestResult } from "./provider";
-import { designPrompt, parseDesign, parseScript, parseSuggest, suggestPrompt, systemPrompt, userPrompt } from "./prompts";
+import type { AIProvider, DesignRequest, DesignResult, ScriptRequest, ScriptResult, SeriesPlan, SeriesRequest, SuggestRequest, SuggestResult } from "./provider";
+import { designPrompt, parseDesign, parseScript, parseSeries, parseSuggest, seriesPrompt, suggestPrompt, systemPrompt, userPrompt } from "./prompts";
 import { OpenAIProvider } from "./openai";
 
 /**
@@ -35,6 +35,17 @@ export class AnthropicProvider implements AIProvider {
     });
     const text = res.content.map((b) => (b.type === "text" ? b.text : "")).join("");
     return parseSuggest(text, req.templates.map((t) => t.id));
+  }
+
+  async planSeries(req: SeriesRequest): Promise<SeriesPlan> {
+    const res = await this.client.messages.create({
+      model: this.model,
+      max_tokens: 2000,
+      temperature: 0.8,
+      messages: [{ role: "user", content: seriesPrompt(req) }],
+    });
+    const text = res.content.map((b) => (b.type === "text" ? b.text : "")).join("");
+    return parseSeries(text, req.count);
   }
 
   async designAgent(req: DesignRequest): Promise<DesignResult> {

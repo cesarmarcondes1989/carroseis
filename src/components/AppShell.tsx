@@ -12,6 +12,7 @@ export function AppShell({ profile, children }: { profile: Profile; children: Re
   const items = [
     { href: "/app", label: t.app.projects, icon: "▦" },
     { href: "/app/novo", label: t.app.newCarousel, icon: "＋" },
+    { href: "/app/serie", label: t.app.series, icon: "⚡" },
     { href: "/app/modelos", label: t.app.models, icon: "◐" },
     { href: "/app/creditos", label: t.app.credits, icon: "◈" },
     { href: "/app/templates", label: t.app.templates, icon: "✎" },

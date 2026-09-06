@@ -6,9 +6,11 @@ export function systemPrompt(req: ScriptRequest) {
   return `Você é um roteirista sênior de carrosséis para Instagram. Escreve em ${lang}.
 Regras absolutas:
 - Nunca use travessão (—). Use vírgula, ponto ou dois-pontos.
-- O primeiro card é a CAPA: manchete curta, forte, que para o dedo. Até 10 palavras.
-- Os cards do meio entregam valor de verdade: um insight por card, título até 12 palavras, texto de apoio de 1 a 3 frases curtas.
-- O último card é a CHAMADA PRA AÇÃO: salvar, compartilhar, seguir ou comentar. Sem clichê genérico, conecte com o tema.
+- O objetivo do carrossel é ser SALVO e ENVIADO por DM (é o que o Instagram mais pesa). Escreva pra isso: conteúdo que a pessoa vai querer guardar pra consultar depois.
+- O primeiro card é a CAPA: manchete curta, forte, que para o dedo. Até 8 palavras. Número, pergunta ou promessa específica funcionam melhor que frase genérica.
+- Micro-aprendizado: cada card do meio entrega UMA ideia só. Título até 8 palavras, texto de apoio de 1 a 2 frases, no máximo 20 palavras no card inteiro (título + texto). Corte adjetivo, não corte substância.
+- Cada card do meio precisa de texto de apoio: título sozinho não ensina.
+- O último card é a CHAMADA PRA AÇÃO: peça explicitamente pra SALVAR (diga por que: "pra consultar quando...") e pra mandar pra alguém que precisa. Sem clichê genérico, conecte com o tema. Pode fechar com uma frase de seguir.
 - Etiqueta (pílula) é opcional: 1 a 3 palavras, tipo "Dica 1", "Erro comum", "Urgente".
 ${req.highlightWords ? "- No título da capa e de 1 ou 2 cards, marque 1 ou 2 palavras de impacto entre **asteriscos duplos**. Elas ganham bloco de cor na arte." : "- Não use asteriscos."}
 - Tom: ${req.tone}.
@@ -21,7 +23,8 @@ Responda SOMENTE com JSON válido no formato:
 
 export function userPrompt(req: ScriptRequest) {
   const src = req.sourceText ? `\n\nMaterial de referência (use como base, não copie literalmente):\n"""\n${req.sourceText.slice(0, 12000)}\n"""` : "";
-  return `Tema: ${req.topic}\nQuantidade de cards: exatamente ${req.slidesCount}.${req.handle ? `\nPerfil: @${req.handle}` : ""}${src}`;
+  const series = req.seriesContext ? `\n\nEste carrossel faz parte de uma SÉRIE:\n${req.seriesContext}\nMantenha a mesma voz dos outros episódios, não repita o que os outros já cobrem e, no último card, além de pedir pra salvar, dê um gancho de uma frase pro próximo episódio (se houver).` : "";
+  return `Tema: ${req.topic}\nQuantidade de cards: exatamente ${req.slidesCount}.${req.handle ? `\nPerfil: @${req.handle}` : ""}${src}${series}`;
 }
 
 export function parseScript(raw: string, count: number): ScriptResult {
@@ -103,4 +106,27 @@ export function parseDesign(raw: string): import("./provider").DesignResult {
   const data = JSON.parse(json) as Partial<import("./provider").DesignResult>;
   if (!Array.isArray(data.layers)) throw new Error("A IA não devolveu camadas.");
   return { layers: data.layers as import("./provider").DesignResult["layers"], message: clean(data.message ?? "Feito."), palette: data.palette ?? null };
+}
+
+export function seriesPrompt(req: import("./provider").SeriesRequest) {
+  const lang = req.locale === "en" ? "English" : "Português do Brasil";
+  const src = req.sourceText ? `\n\nMaterial de referência:\n"""\n${req.sourceText.slice(0, 8000)}\n"""` : "";
+  return `Você é estrategista de conteúdo para Instagram. Responda em ${lang}. Nunca use travessão.
+Planeje uma SÉRIE de ${req.count} carrosséis sobre o tema abaixo, pra postar ao longo de uma ou duas semanas. Cada episódio é um carrossel completo e independente (quem cai de paraquedas entende), mas a série tem progressão: do problema pro método, do básico pro avançado, ou um ângulo diferente por episódio. Zero sobreposição entre episódios.
+Tom: ${req.tone}. Template: ${req.templateName} (${req.templateHint}).${req.handle ? ` Perfil: @${req.handle}.` : ""}
+Pra cada episódio dê: title (manchete de capa, até 8 palavras, com número, pergunta ou promessa específica), angle (2 ou 3 frases dizendo exatamente o que esse episódio cobre e o que NÃO cobre porque é de outro episódio), hook (uma frase de gancho que o episódio anterior usa pra puxar este).
+Também dê um name curto pra série (até 5 palavras).
+Tema: ${req.topic}${src}
+Responda SOMENTE com JSON: {"name": string, "parts": [{"title": string, "angle": string, "hook": string}]}`;
+}
+
+export function parseSeries(raw: string, count: number): import("./provider").SeriesPlan {
+  const json = raw.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "");
+  const data = JSON.parse(json) as Partial<import("./provider").SeriesPlan>;
+  const parts = (data.parts ?? [])
+    .filter((p) => p && typeof p.title === "string" && p.title.trim())
+    .map((p) => ({ title: clean(p.title).slice(0, 120), angle: clean(p.angle ?? ""), hook: clean(p.hook ?? "") }))
+    .slice(0, count);
+  if (parts.length < 2) throw new Error("A IA não devolveu a série. Tente de novo.");
+  return { name: clean(data.name ?? parts[0].title).slice(0, 60), parts };
 }

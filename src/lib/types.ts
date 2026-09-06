@@ -88,6 +88,10 @@ export type Carousel = {
   instagram_handle: string | null;
   renders: Render[];
   seamless: boolean;
+  series_id?: string | null;
+  series_name?: string | null;
+  series_index?: number | null;
+  series_total?: number | null;
   credits_spent: number;
   error: string | null;
   created_at: string;

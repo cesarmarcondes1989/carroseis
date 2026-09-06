@@ -78,7 +78,10 @@ export function Creator({ templates, models, profile, initialTemplate, initialTo
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
       <div className="space-y-10">
-        <h1 className="font-display text-2xl font-bold">{t.create.title}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="font-display text-2xl font-bold">{t.create.title}</h1>
+          <Link href={`/app/serie?template=${templateId}${topic && !looksLikeScript(topic) ? `&topic=${encodeURIComponent(topic.slice(0, 300))}` : ""}`} className="pill border border-lime/40 bg-lime/10 text-lime">⚡ {t.series.cta}</Link>
+        </div>
 
         {/* 1. Template */}
         <section>
