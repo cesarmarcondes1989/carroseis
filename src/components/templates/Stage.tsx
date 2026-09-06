@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { clsx } from "clsx";
 import { SlideView } from "@/lib/render/Slide";
 import type { ResolvedStyle } from "@/lib/render/Slide";
@@ -8,6 +8,13 @@ import { SIZES, type Aspect, type Slide, type Template } from "@/lib/types";
 
 type Drag = { kind: "move" | "resize"; handle?: string; startX: number; startY: number; orig: { x: number; y: number; w: number; h: number }; id: string };
 const SNAP = 8;
+const COARSE = "(pointer: coarse)";
+function subscribeCoarse(cb: () => void) {
+  const mq = window.matchMedia(COARSE);
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+}
+const getCoarse = () => window.matchMedia(COARSE).matches;
 const HANDLES = ["nw", "n", "ne", "e", "se", "s", "sw", "w"] as const;
 
 /** Stage escalável: desenha o card real e, por cima, as caixas de seleção/arrasto de cada camada. */
@@ -29,7 +36,9 @@ export function Stage({ template, layers, style, slide, index, total, aspect, se
   const [scale, setScale] = useState(0.3);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [guides, setGuides] = useState<{ x?: number; y?: number }>({});
+  const coarse = useSyncExternalStore(subscribeCoarse, getCoarse, () => false);
   const { w, h } = SIZES[aspect];
+  const HS = coarse ? 22 : 12; // tamanho da alça: maior no toque
   const yScale = h / CANVAS.h;
 
   useEffect(() => {
@@ -96,7 +105,7 @@ export function Stage({ template, layers, style, slide, index, total, aspect, se
   };
 
   return (
-    <div ref={ref} className="relative w-full select-none overflow-hidden rounded-xl border border-line bg-bg-3 shadow-2xl shadow-black/50" style={{ aspectRatio: `${w} / ${h}`, touchAction: "none" }} onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerCancel={endDrag} onPointerDown={() => onSelect(null)}>
+    <div ref={ref} className="relative w-full select-none overflow-hidden rounded-xl border border-line bg-bg-3 shadow-2xl shadow-black/50" style={{ aspectRatio: `${w} / ${h}`, touchAction: "pan-y" }} onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerCancel={endDrag} onPointerDown={() => onSelect(null)}>
       <div style={{ position: "absolute", top: 0, left: 0, width: w, height: h, transform: `scale(${scale})`, transformOrigin: "top left", pointerEvents: "none" }}>
         <SlideView template={template} slide={slide} index={index} total={total} aspect={aspect} style={style} coverImage={coverImage} authorName="Você" />
       </div>
@@ -113,6 +122,7 @@ export function Stage({ template, layers, style, slide, index, total, aspect, se
           <div key={l.id} className={clsx("absolute", sel ? "z-20" : "z-10")} style={box}>
             <div
               className={clsx("absolute inset-0 rounded-sm border", sel ? "border-lime" : "border-transparent hover:border-lime/50", l.locked ? "cursor-default" : "cursor-move")}
+              style={{ touchAction: "none" }}
               onPointerDown={(e) => start(e, l, "move")}
               onDoubleClick={() => onSelect(l.id)}
               title={l.name ?? l.id}
@@ -122,10 +132,13 @@ export function Stage({ template, layers, style, slide, index, total, aspect, se
                   <div
                     key={hd}
                     onPointerDown={(e) => start(e, l, "resize", hd)}
-                    className="absolute z-30 h-3 w-3 rounded-sm border border-black bg-lime"
+                    className="absolute z-30 rounded-sm border border-black bg-lime"
                     style={{
-                      left: hd.includes("w") ? -6 : hd.includes("e") ? "calc(100% - 6px)" : "calc(50% - 6px)",
-                      top: hd.includes("n") ? -6 : hd.includes("s") ? "calc(100% - 6px)" : "calc(50% - 6px)",
+                      width: HS,
+                      height: HS,
+                      touchAction: "none",
+                      left: hd.includes("w") ? -HS / 2 : hd.includes("e") ? `calc(100% - ${HS / 2}px)` : `calc(50% - ${HS / 2}px)`,
+                      top: hd.includes("n") ? -HS / 2 : hd.includes("s") ? `calc(100% - ${HS / 2}px)` : `calc(50% - ${HS / 2}px)`,
                       cursor: `${hd}-resize`,
                     }}
                   />

@@ -33,6 +33,7 @@ export function TemplateEditor({ initial, baseTemplate }: { initial: EditorDoc; 
   const [sample, setSample] = useState<Record<Role, Slide>>(SAMPLE);
   const [handle, setHandle] = useState("seuperfil");
   const [tab, setTab] = useState<"layers" | "brand" | "agent">("layers");
+  const [mobileTab, setMobileTab] = useState<"list" | "layers" | "brand" | "agent">("layers");
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ kind: "ok" | "error" | "info"; text: string } | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -177,58 +178,117 @@ export function TemplateEditor({ initial, baseTemplate }: { initial: EditorDoc; 
   const total = 5;
   const index = ROLE_INDEX[role];
 
+  const layerActions = selectedLayer ? (
+    <div className="flex flex-wrap gap-1">
+      <button className="btn btn-ghost btn-sm !px-2" title={e.up} onClick={() => move(selectedLayer.id, 1)}>▲</button>
+      <button className="btn btn-ghost btn-sm !px-2" title={e.down} onClick={() => move(selectedLayer.id, -1)}>▼</button>
+      <button className="btn btn-ghost btn-sm !px-2" title={e.duplicateLayer} onClick={() => duplicate(selectedLayer.id)}>⧉</button>
+      <button className="btn btn-ghost btn-sm !px-2" title={e.hide} onClick={() => updateLayer(selectedLayer.id, { hidden: !selectedLayer.hidden })}>{selectedLayer.hidden ? "◌" : "◉"}</button>
+      <button className="btn btn-ghost btn-sm !px-2" title={e.lock} onClick={() => updateLayer(selectedLayer.id, { locked: !selectedLayer.locked })}>{selectedLayer.locked ? "🔒" : "🔓"}</button>
+      <button className="btn btn-danger btn-sm !px-2" title={e.delete} onClick={() => remove(selectedLayer.id)}>✕</button>
+    </div>
+  ) : null;
+
+  const rightPanel = (
+    <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin">
+      {tab === "layers" ? (selectedLayer ? <LayerProps layer={selectedLayer} palette={doc.palette} fonts={doc.fonts} onChange={(p) => updateLayer(selectedLayer.id, p)} /> : <p className="text-xs text-fg-3">{e.selectHint}</p>) : null}
+      {tab === "brand" ? (
+        <div className="space-y-4">
+          <div>
+            <div className="text-xs font-bold uppercase tracking-wider text-fg-3">{e.palette}</div>
+            <div className="mt-2 grid grid-cols-5 gap-2">
+              {(["bg", "fg", "accent", "muted", "accent2"] as const).map((k) => (
+                <label key={k} className="flex flex-col items-center gap-1 text-[10px] uppercase text-fg-3">
+                  <input type="color" value={doc.palette[k]} onChange={(ev) => commit((d) => ({ ...d, palette: { ...d.palette, [k]: ev.target.value } }))} className="h-10 w-full cursor-pointer rounded-lg border border-line bg-transparent" />
+                  {k}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs font-bold uppercase tracking-wider text-fg-3">{e.fonts}</div>
+            <label className="mt-2 block text-xs"><span className="text-fg-3">{e.fontDisplay}</span><select className="input mt-0.5 py-1 text-sm" value={doc.fonts.display} onChange={(ev) => commit((d) => ({ ...d, fonts: { ...d.fonts, display: ev.target.value } }))}>{FONT_NAMES.map((f) => <option key={f}>{f}</option>)}</select></label>
+            <label className="mt-2 block text-xs"><span className="text-fg-3">{e.fontBody}</span><select className="input mt-0.5 py-1 text-sm" value={doc.fonts.body} onChange={(ev) => commit((d) => ({ ...d, fonts: { ...d.fonts, body: ev.target.value } }))}>{FONT_NAMES.map((f) => <option key={f}>{f}</option>)}</select></label>
+          </div>
+          <label className="flex items-center gap-2 text-xs"><input type="checkbox" className="accent-lime" checked={doc.supportsAiCover} onChange={(ev) => commit((d) => ({ ...d, supportsAiCover: ev.target.checked }))} /> {e.aiCover}</label>
+        </div>
+      ) : null}
+      {tab === "agent" ? (
+        <div className="flex h-full min-h-[260px] flex-col">
+          <p className="text-xs text-fg-3">{e.agentHint}</p>
+          <div className="mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto text-xs">
+            {chat.map((m, i) => <div key={i} className={clsx("rounded-lg px-3 py-2", m.who === "you" ? "bg-bg-3 text-fg" : "bg-violet/15 text-fg")}>{m.who === "ai" ? "✨ " : ""}{m.text}</div>)}
+            {busy === "agent" ? <div className="rounded-lg bg-violet/15 px-3 py-2 text-fg-2"><Spinner /> {e.agentThinking}</div> : null}
+          </div>
+          <textarea className="input mt-2 min-h-20 text-sm" placeholder={e.agentPlaceholder} value={instruction} onChange={(ev) => setInstruction(ev.target.value)} onKeyDown={(ev) => { if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) askAgent(); }} />
+          <button className="btn btn-primary btn-sm mt-2" onClick={askAgent} disabled={busy === "agent" || !instruction.trim()}>✨ {e.agentSend}</button>
+        </div>
+      ) : null}
+    </div>
+  );
+
+  const layerList = (
+    <>
+      <div className="flex items-center justify-between"><span className="text-xs font-bold uppercase tracking-wider text-fg-3">{e.layers}</span>
+        <select className="input w-auto py-1 text-xs" value="" onChange={(ev) => { addLayer(ev.target.value); ev.target.value = ""; }}>
+          <option value="">＋ {e.add}</option>
+          {Object.entries(e.addItems).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+        </select>
+      </div>
+      <div className="mt-2 min-h-0 flex-1 space-y-0.5 overflow-y-auto scrollbar-thin">
+        {[...layers].reverse().map((l) => (
+          <div key={l.id} onClick={() => setSelected(l.id)} className={clsx("flex cursor-pointer items-center gap-1 rounded-lg px-2 py-2 text-xs lg:py-1.5", selected === l.id ? "bg-lime/15 text-fg" : "text-fg-2 hover:bg-bg-3", l.hidden && "opacity-40")}>
+            <span className="w-4 text-center text-fg-3">{{ text: "T", shape: "◼", pill: "◖", image: "▣", pagination: "•••" }[l.type]}</span>
+            <span className="min-w-0 flex-1 truncate">{l.name ?? (l.type === "text" ? l.text.slice(0, 18) : l.id)}</span>
+            <button title={e.hide} onClick={(ev) => { ev.stopPropagation(); updateLayer(l.id, { hidden: !l.hidden }); }} className="px-1 text-fg-3 hover:text-fg">{l.hidden ? "◌" : "◉"}</button>
+            <button title={e.lock} onClick={(ev) => { ev.stopPropagation(); updateLayer(l.id, { locked: !l.locked }); }} className="px-1 text-fg-3 hover:text-fg">{l.locked ? "🔒" : "🔓"}</button>
+            <button title={e.editProps} onClick={(ev) => { ev.stopPropagation(); setSelected(l.id); setTab("layers"); setMobileTab("layers"); }} className="px-1 text-lime lg:hidden">✎</button>
+          </div>
+        ))}
+      </div>
+      {selectedLayer ? <div className="mt-2 border-t border-line pt-2">{layerActions}</div> : null}
+      {role !== "cover" ? <button className="btn btn-ghost btn-sm mt-2" onClick={copyFromCover}>{e.copyRole}</button> : null}
+    </>
+  );
+
+  const mobileTabs = (["layers", "list", "brand", "agent"] as const).map((k) => ({ k, label: k === "list" ? e.layers : k === "layers" ? e.props : k === "brand" ? e.palette : `✨ ${e.agent}` }));
+
   return (
-    <div className="flex h-[calc(100vh-7rem)] min-h-[640px] flex-col gap-3">
+    <div className="flex flex-col gap-3 lg:h-[calc(100vh-7rem)] lg:min-h-[640px]">
       <div className="flex flex-wrap items-center gap-2">
         <Link href="/app/templates" className="text-xs text-fg-3 hover:text-fg">← {e.back}</Link>
-        <input className="input w-64 py-1.5 font-display text-lg font-bold" value={doc.name} onChange={(ev) => patchLive((d) => ({ ...d, name: ev.target.value }))} placeholder={e.name} />
+        <input className="input w-full py-1.5 font-display text-lg font-bold sm:w-64" value={doc.name} onChange={(ev) => patchLive((d) => ({ ...d, name: ev.target.value }))} placeholder={e.name} />
         <div className="flex gap-1 rounded-xl bg-bg-3 p-1">
           {(["cover", "inner", "last"] as Role[]).map((r) => <button key={r} onClick={() => { setRole(r); setSelected(null); }} className={clsx("rounded-lg px-3 py-1.5 text-sm font-bold", role === r ? "bg-bg text-fg" : "text-fg-2")}>{e.roles[r]}</button>)}
         </div>
         <div className="flex gap-1">{(["4:5", "1:1"] as Aspect[]).map((a) => <button key={a} onClick={() => setAspect(a)} className={clsx("btn btn-sm", aspect === a ? "btn-primary" : "btn-ghost")}>{a}</button>)}</div>
-        <button className="btn btn-ghost btn-sm" onClick={undo} title="Ctrl+Z">↶ {e.undo}</button>
-        <button className="btn btn-ghost btn-sm" onClick={redo} title="Ctrl+Y">↷ {e.redo}</button>
+        <button className="btn btn-ghost btn-sm" onClick={undo} title="Ctrl+Z">↶ <span className="hidden sm:inline">{e.undo}</span></button>
+        <button className="btn btn-ghost btn-sm" onClick={redo} title="Ctrl+Y">↷ <span className="hidden sm:inline">{e.redo}</span></button>
         <div className="ml-auto flex items-center gap-2">
           {dirty ? <span className="text-xs text-fg-3">{e.unsaved}</span> : null}
-          <button className="btn btn-primary" onClick={save} disabled={busy === "save"}>{busy === "save" ? <><Spinner /> {e.saving}</> : e.save}</button>
+          <button className="btn btn-primary btn-sm sm:btn" onClick={save} disabled={busy === "save"}>{busy === "save" ? <><Spinner /> {e.saving}</> : e.save}</button>
         </div>
       </div>
       {msg ? <Alert kind={msg.kind}>{msg.text}</Alert> : null}
 
       <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[220px_minmax(0,1fr)_320px]">
-        {/* camadas */}
-        <div className="card flex min-h-0 flex-col p-3">
-          <div className="flex items-center justify-between"><span className="text-xs font-bold uppercase tracking-wider text-fg-3">{e.layers}</span>
-            <select className="input w-auto py-1 text-xs" value="" onChange={(ev) => { addLayer(ev.target.value); ev.target.value = ""; }}>
-              <option value="">＋ {e.add}</option>
-              {Object.entries(e.addItems).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </select>
-          </div>
-          <div className="mt-2 min-h-0 flex-1 space-y-0.5 overflow-y-auto scrollbar-thin">
-            {[...layers].reverse().map((l) => (
-              <div key={l.id} onClick={() => setSelected(l.id)} className={clsx("flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1.5 text-xs", selected === l.id ? "bg-lime/15 text-fg" : "text-fg-2 hover:bg-bg-3", l.hidden && "opacity-40")}>
-                <span className="w-4 text-center text-fg-3">{{ text: "T", shape: "◼", pill: "◖", image: "▣", pagination: "•••" }[l.type]}</span>
-                <span className="min-w-0 flex-1 truncate">{l.name ?? (l.type === "text" ? l.text.slice(0, 18) : l.id)}</span>
-                <button title={e.hide} onClick={(ev) => { ev.stopPropagation(); updateLayer(l.id, { hidden: !l.hidden }); }} className="text-fg-3 hover:text-fg">{l.hidden ? "◌" : "◉"}</button>
-                <button title={e.lock} onClick={(ev) => { ev.stopPropagation(); updateLayer(l.id, { locked: !l.locked }); }} className="text-fg-3 hover:text-fg">{l.locked ? "🔒" : "🔓"}</button>
-              </div>
-            ))}
-          </div>
-          {selectedLayer ? (
-            <div className="mt-2 flex flex-wrap gap-1 border-t border-line pt-2">
-              <button className="btn btn-ghost btn-sm !px-2" title={e.up} onClick={() => move(selectedLayer.id, 1)}>▲</button>
-              <button className="btn btn-ghost btn-sm !px-2" title={e.down} onClick={() => move(selectedLayer.id, -1)}>▼</button>
-              <button className="btn btn-ghost btn-sm !px-2" title={e.duplicateLayer} onClick={() => duplicate(selectedLayer.id)}>⧉</button>
-              <button className="btn btn-danger btn-sm !px-2" title={e.delete} onClick={() => remove(selectedLayer.id)}>✕</button>
-            </div>
-          ) : null}
-          {role !== "cover" ? <button className="btn btn-ghost btn-sm mt-2" onClick={copyFromCover}>{e.copyRole}</button> : null}
-        </div>
+        {/* camadas (coluna esquerda no desktop; aba no celular) */}
+        <div className={clsx("card min-h-0 flex-col p-3 lg:order-1 lg:flex", mobileTab === "list" ? "order-3 flex" : "hidden")}>{layerList}</div>
 
         {/* stage */}
-        <div className="flex min-h-0 flex-col items-center overflow-auto">
+        <div className="order-1 flex min-h-0 flex-col items-center lg:order-2 lg:overflow-auto">
           <div className="w-full max-w-[520px]">
             <Stage template={template} layers={layers} style={style} slide={sample[role]} index={index} total={total} aspect={aspect} selectedId={selected} onSelect={setSelected} onChange={onStageChange} onCommit={onStageCommit} coverImage={DEMO_COVER} />
+          </div>
+          {/* barra de ações da camada selecionada (útil no toque) */}
+          <div className="mt-2 flex w-full max-w-[520px] flex-wrap items-center gap-2 lg:hidden">
+            {selectedLayer ? (
+              <>
+                <span className="truncate text-xs text-fg-2">{selectedLayer.name ?? selectedLayer.id}</span>
+                {layerActions}
+                <button className="btn btn-primary btn-sm ml-auto" onClick={() => { setTab("layers"); setMobileTab("layers"); }}>✎ {e.editProps}</button>
+              </>
+            ) : <span className="text-xs text-fg-3">{e.mobileHint}</span>}
           </div>
           <details className="mt-3 w-full max-w-[520px] text-xs">
             <summary className="cursor-pointer text-fg-3">{e.preview}</summary>
@@ -241,46 +301,17 @@ export function TemplateEditor({ initial, baseTemplate }: { initial: EditorDoc; 
           </details>
         </div>
 
-        {/* painel direito */}
-        <div className="card flex min-h-0 flex-col p-3">
-          <div className="flex gap-1 rounded-xl bg-bg-3 p-1">
+        {/* abas do celular */}
+        <div className="order-2 flex gap-1 rounded-xl bg-bg-3 p-1 lg:hidden">
+          {mobileTabs.map(({ k, label }) => <button key={k} onClick={() => { setMobileTab(k); if (k !== "list") setTab(k); }} className={clsx("flex-1 rounded-lg py-2 text-xs font-bold", mobileTab === k ? "bg-bg text-fg" : "text-fg-2")}>{label}</button>)}
+        </div>
+
+        {/* painel direito (desktop) / painel da aba (celular) */}
+        <div className={clsx("card min-h-0 flex-col p-3 lg:order-3 lg:flex", mobileTab !== "list" ? "order-3 flex min-h-[320px]" : "hidden")}>
+          <div className="hidden gap-1 rounded-xl bg-bg-3 p-1 lg:flex">
             {(["layers", "brand", "agent"] as const).map((k) => <button key={k} onClick={() => setTab(k)} className={clsx("flex-1 rounded-lg py-1.5 text-xs font-bold", tab === k ? "bg-bg text-fg" : "text-fg-2")}>{k === "layers" ? e.props : k === "brand" ? e.palette : `✨ ${e.agent}`}</button>)}
           </div>
-          <div className="mt-3 min-h-0 flex-1 overflow-y-auto scrollbar-thin">
-            {tab === "layers" ? (selectedLayer ? <LayerProps layer={selectedLayer} palette={doc.palette} fonts={doc.fonts} onChange={(p) => updateLayer(selectedLayer.id, p)} /> : <p className="text-xs text-fg-3">Clique numa camada no stage ou na lista.</p>) : null}
-            {tab === "brand" ? (
-              <div className="space-y-4">
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-wider text-fg-3">{e.palette}</div>
-                  <div className="mt-2 grid grid-cols-5 gap-2">
-                    {(["bg", "fg", "accent", "muted", "accent2"] as const).map((k) => (
-                      <label key={k} className="flex flex-col items-center gap-1 text-[10px] uppercase text-fg-3">
-                        <input type="color" value={doc.palette[k]} onChange={(ev) => commit((d) => ({ ...d, palette: { ...d.palette, [k]: ev.target.value } }))} className="h-10 w-full cursor-pointer rounded-lg border border-line bg-transparent" />
-                        {k}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-wider text-fg-3">{e.fonts}</div>
-                  <label className="mt-2 block text-xs"><span className="text-fg-3">{e.fontDisplay}</span><select className="input mt-0.5 py-1 text-sm" value={doc.fonts.display} onChange={(ev) => commit((d) => ({ ...d, fonts: { ...d.fonts, display: ev.target.value } }))}>{FONT_NAMES.map((f) => <option key={f}>{f}</option>)}</select></label>
-                  <label className="mt-2 block text-xs"><span className="text-fg-3">{e.fontBody}</span><select className="input mt-0.5 py-1 text-sm" value={doc.fonts.body} onChange={(ev) => commit((d) => ({ ...d, fonts: { ...d.fonts, body: ev.target.value } }))}>{FONT_NAMES.map((f) => <option key={f}>{f}</option>)}</select></label>
-                </div>
-                <label className="flex items-center gap-2 text-xs"><input type="checkbox" className="accent-lime" checked={doc.supportsAiCover} onChange={(ev) => commit((d) => ({ ...d, supportsAiCover: ev.target.checked }))} /> {e.aiCover}</label>
-              </div>
-            ) : null}
-            {tab === "agent" ? (
-              <div className="flex h-full flex-col">
-                <p className="text-xs text-fg-3">{e.agentHint}</p>
-                <div className="mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto text-xs">
-                  {chat.map((m, i) => <div key={i} className={clsx("rounded-lg px-3 py-2", m.who === "you" ? "bg-bg-3 text-fg" : "bg-violet/15 text-fg")}>{m.who === "ai" ? "✨ " : ""}{m.text}</div>)}
-                  {busy === "agent" ? <div className="rounded-lg bg-violet/15 px-3 py-2 text-fg-2"><Spinner /> {e.agentThinking}</div> : null}
-                </div>
-                <textarea className="input mt-2 min-h-20 text-sm" placeholder={e.agentPlaceholder} value={instruction} onChange={(ev) => setInstruction(ev.target.value)} onKeyDown={(ev) => { if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) askAgent(); }} />
-                <button className="btn btn-primary btn-sm mt-2" onClick={askAgent} disabled={busy === "agent" || !instruction.trim()}>✨ {e.agentSend}</button>
-              </div>
-            ) : null}
-          </div>
+          <div className="mt-3 flex min-h-0 flex-1 flex-col">{rightPanel}</div>
         </div>
       </div>
     </div>

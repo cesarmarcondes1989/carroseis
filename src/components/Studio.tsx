@@ -19,6 +19,7 @@ export function Studio({ initial, templates, models, profile, canDownload, canEd
   const [c, setC] = useState<Carousel>(initial);
   const [active, setActive] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
+  const [everRendered, setEverRendered] = useState(!!initial.renders?.length);
   const [msg, setMsg] = useState<{ kind: "error" | "ok" | "info"; text: string } | null>(null);
   const [dirty, setDirty] = useState(false);
   const [tab, setTab] = useState<"slides" | "brand" | "cover">("slides");
@@ -50,6 +51,7 @@ export function Studio({ initial, templates, models, profile, canDownload, canEd
       if (data.carousel) {
         setC(data.carousel);
         setDirty(false);
+        if (data.carousel.renders?.length) setEverRendered(true);
       }
       return data;
     } catch (e) {
@@ -81,6 +83,19 @@ export function Studio({ initial, templates, models, profile, canDownload, canEd
     }
     await call("render", () => fetch(`/api/carousels/${c.id}/render`, { method: "POST" }));
   }
+
+  // Primeira abertura: se o carrossel ainda não tem imagens, gera de uma vez (elas ficam salvas no Storage).
+  const autoRendered = useRef(false);
+  useEffect(() => {
+    if (autoRendered.current) return;
+    if (c.status === "ready" || c.status === "error" || c.status === "generating" || c.renders?.length || !c.slides?.length) return;
+    autoRendered.current = true;
+    const id = setTimeout(() => void call("render", () => fetch(`/api/carousels/${c.id}/render`, { method: "POST" })), 0);
+    return () => { clearTimeout(id); autoRendered.current = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const hasImages = !!c.renders?.length && !dirty;
 
   async function generateCover() {
     if (!c.cover_ai_charged && !profile.unlimited_credits && !confirm(`${t.studio.generateCover}?`)) return;
@@ -160,7 +175,7 @@ export function Studio({ initial, templates, models, profile, canDownload, canEd
         {msg ? <div className="mt-4"><Alert kind={msg.kind}>{msg.text}</Alert></div> : null}
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button onClick={render} disabled={!!busy} className="btn btn-primary">{busy === "render" ? <><Spinner /> {t.studio.rendering}</> : `🎨 ${t.studio.render}`}</button>
+          <button onClick={render} disabled={!!busy} className={clsx("btn", hasImages ? "btn-ghost" : "btn-primary")}>{busy === "render" ? <><Spinner /> {t.studio.rendering}</> : hasImages ? `✓ ${t.studio.imagesReady} · ↻` : everRendered ? `🎨 ${t.studio.renderAgain}` : `🎨 ${t.studio.render}`}</button>
           <button onClick={() => call("rewrite", () => fetch(`/api/carousels/${c.id}/rewrite`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }))} disabled={!!busy} className="btn btn-ghost">{busy === "rewrite" ? <Spinner /> : `✨ ${t.studio.regenerate}`}</button>
           <button onClick={remove} className="btn btn-danger btn-sm ml-auto">{t.common.delete}</button>
         </div>
