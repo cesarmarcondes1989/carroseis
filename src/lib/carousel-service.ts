@@ -22,17 +22,7 @@ export function overridesFromModel(m: BrandModel | null | undefined): BrandOverr
   return { palette: m.palette ?? undefined, font_display: m.font_display, font_body: m.font_body, text_scale: Number(m.text_scale ?? 1), instagram_handle: m.instagram_handle };
 }
 
-export function parseScriptText(raw: string): Slide[] {
-  return raw
-    .split(/\n+/)
-    .map((l) => l.trim())
-    .filter(Boolean)
-    .map((l) => {
-      const [titulo, ...rest] = l.split("|");
-      return { titulo: titulo.trim(), texto: rest.join("|").trim() || undefined };
-    })
-    .slice(0, 10);
-}
+export { parseScript as parseScriptText } from "@/lib/script-parse";
 
 export type CreateInput = {
   profile: Profile;

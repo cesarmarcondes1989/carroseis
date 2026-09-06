@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n/client";
 import { resolveStyle } from "@/lib/render/Slide";
 import { sampleSlides } from "@/lib/samples";
+import { looksLikeScript, parseScript } from "@/lib/script-parse";
 import { CREDIT_COST, type Aspect, type BrandModel, type CoverMode, type Profile, type Template } from "@/lib/types";
 import { SlidePreview } from "./SlidePreview";
 import { Alert, Field, Spinner } from "./ui";
@@ -31,6 +32,9 @@ export function Creator({ templates, models, profile, initialTemplate, initialTo
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("all");
+  const [dismissedHint, setDismissedHint] = useState(false);
+  const scriptHint = source === "topic" && !dismissedHint && looksLikeScript(topic);
+  const parsedScript = useMemo(() => (source === "script" ? parseScript(script) : []), [source, script]);
 
   const template = templates.find((x) => x.id === templateId) ?? templates[0];
   const model = models.find((m) => m.id === modelId);
@@ -103,6 +107,16 @@ export function Creator({ templates, models, profile, initialTemplate, initialTo
           </div>
           <div className="mt-4 space-y-4">
             {source === "topic" ? <textarea className="input min-h-28" placeholder={t.create.topicPlaceholder} value={topic} onChange={(e) => setTopic(e.target.value)} /> : null}
+            {scriptHint ? (
+              <div className="rounded-xl border border-lime/50 bg-lime/10 p-4 text-sm">
+                <div className="font-bold">{t.create.scriptDetected}</div>
+                <div className="mt-1 text-fg-2">{t.create.scriptDetectedDesc.replace("{n}", String(parseScript(topic).length))}</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button onClick={() => { setScript(topic); setSource("script"); }} className="btn btn-primary btn-sm">{t.create.useAsScript}</button>
+                  <button onClick={() => setDismissedHint(true)} className="btn btn-ghost btn-sm">{t.create.letAiRewrite}</button>
+                </div>
+              </div>
+            ) : null}
             {source === "url" || source === "youtube" ? (
               <>
                 <input className="input" placeholder={source === "youtube" ? "https://youtube.com/watch?v=..." : t.create.urlPlaceholder} value={url} onChange={(e) => setUrl(e.target.value)} />
@@ -115,7 +129,19 @@ export function Creator({ templates, models, profile, initialTemplate, initialTo
                 <input className="input" placeholder={t.create.topicPlaceholder} value={topic} onChange={(e) => setTopic(e.target.value)} />
               </>
             ) : null}
-            {source === "script" ? <textarea className="input min-h-48 font-mono text-sm" placeholder={t.create.scriptPlaceholder} value={script} onChange={(e) => setScript(e.target.value)} /> : null}
+            {source === "script" ? (
+              <>
+                <textarea className="input min-h-48 font-mono text-sm" placeholder={t.create.scriptPlaceholder} value={script} onChange={(e) => setScript(e.target.value)} />
+                {parsedScript.length ? (
+                  <div className="rounded-xl border border-line bg-bg-2 p-3 text-xs">
+                    <div className="font-bold text-fg-2">{t.create.cardsDetected.replace("{n}", String(parsedScript.length))}</div>
+                    <ol className="mt-2 space-y-1 text-fg-3">
+                      {parsedScript.map((sl, i) => <li key={i} className="truncate"><span className="text-lime">{i + 1}.</span> <span className="text-fg">{sl.titulo}</span>{sl.texto ? ` · ${sl.texto.slice(0, 60)}` : ""}</li>)}
+                    </ol>
+                  </div>
+                ) : script.trim() ? <div className="text-xs text-fg-3">{t.create.noCards}</div> : null}
+              </>
+            ) : null}
             {source !== "script" ? (
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label={`${t.create.slidesCount}: ${slidesCount}`}><input type="range" min={3} max={10} value={slidesCount} onChange={(e) => setSlidesCount(Number(e.target.value))} className="w-full accent-lime" /></Field>
