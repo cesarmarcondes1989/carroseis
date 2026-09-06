@@ -3,12 +3,12 @@ export const LOCALES: Locale[] = ["pt-BR", "en"];
 export const DEFAULT_LOCALE: Locale = "pt-BR";
 
 const pt = {
-  brand: "CarrosseisIA",
+  brand: "Desliza IA",
   nav: { templates: "Templates", pricing: "Preços", mcp: "MCP / Claude", login: "Entrar", signup: "Criar conta grátis", app: "Meu estúdio" },
   hero: {
-    kicker: "Carrosséis para Instagram em menos de 1 minuto",
-    title: "Você escolhe o template e diz o tema. A IA escreve, desenha e entrega os PNGs.",
-    subtitle: "Carrossel é o post que mais engaja no Instagram. E o que mais dá trabalho. Sem Canva, sem Figma, sem designer: roteiro, arte e download prontos pra postar.",
+    kicker: "Carrosséis para Instagram com IA",
+    title: "Ideias que fazem você parar de deslizar.",
+    subtitle: "Você escolhe o template e diz o tema. A IA escreve o roteiro, desenha a arte e entrega as imagens prontas pra postar. Sem Canva, sem Figma, sem designer.",
     cta: "Criar meu primeiro carrossel",
     cta2: "Ver templates",
     proof: "30 créditos grátis ao criar a conta. Sem cartão.",
@@ -24,7 +24,7 @@ const pt = {
   templates: { title: "Um template pra cada nicho", subtitle: "Cada um com paleta, tipografia e layout próprios. E o seu modelo salvo entra por cima de qualquer um deles.", noAiCover: "sem capa por IA" },
   mcp: {
     title: "Use direto no Claude",
-    subtitle: "Conecte o CarrosseisIA como conector MCP. Você conversa, o Claude escreve o roteiro, o nosso servidor pinta a arte e devolve o link. Cobra os mesmos créditos da sua conta.",
+    subtitle: "Conecte o Desliza IA como conector MCP. Você conversa, o Claude escreve o roteiro, o nosso servidor pinta a arte e devolve o link. Cobra os mesmos créditos da sua conta.",
     bullets: ["Chave API gerada no seu painel, em um clique", "4 ferramentas: listar templates, listar modelos, ver créditos, criar carrossel", "Funciona no Claude.ai, Claude Code e qualquer cliente MCP"],
     cta: "Gerar minha chave",
   },
@@ -50,7 +50,7 @@ const pt = {
       { q: "Como conecto no Claude?", a: "Gere uma chave em Meu estúdio > Chave API, copie a URL do conector e cole em Configurações > Conectores no Claude. Pronto: peça um carrossel na conversa." },
     ],
   },
-  footer: { tagline: "Carrosséis automatizados com IA. Feito no Brasil.", terms: "Termos", privacy: "Privacidade" },
+  footer: { tagline: "Ideias que fazem você parar de deslizar. Feito no Brasil.", terms: "Termos", privacy: "Privacidade" },
   auth: {
     loginTitle: "Bem-vindo de volta",
     signupTitle: "Crie sua conta",
@@ -161,7 +161,7 @@ const pt = {
     created: "Chave criada. Copie agora: ela não aparece de novo.",
     revoke: "Revogar",
     howto: "Como conectar",
-    steps: ["No Claude.ai, abra Configurações > Conectores > Adicionar conector personalizado.", "Cole a URL abaixo como endereço do servidor MCP. Não precisa de OAuth.", "No Claude Code: claude mcp add --transport http carrosseisia <URL>", "Peça: 'cria um carrossel sobre X usando o template marketing'."],
+    steps: ["No Claude.ai, abra Configurações > Conectores > Adicionar conector personalizado.", "Cole a URL abaixo como endereço do servidor MCP. Não precisa de OAuth.", "No Claude Code: claude mcp add --transport http deslizaia <URL>", "Peça: 'cria um carrossel sobre X usando o template marketing'."],
     empty: "Nenhuma chave ainda.",
   },
   models: {
@@ -276,7 +276,7 @@ const pt = {
     lock: "Travar",
     hide: "Ocultar",
     upload: "Subir imagem",
-    fields: { x: "X", y: "Y", w: "Largura", h: "Altura", text: "Texto", size: "Tamanho", color: "Cor", fill: "Preenchimento", align: "Alinhar", valign: "Vertical", font: "Fonte", weight: "Peso", lineHeight: "Entrelinha", uppercase: "Caixa alta", letterSpacing: "Espaçamento", highlight: "Blocos em **palavras**", radius: "Raio", opacity: "Opacidade", rotate: "Rotação", stroke: "Borda", fit: "Ajuste", fade: "Degradê na base", useCover: "Usar a foto de capa do carrossel", arrow: "Seta", shape: "Forma" },
+    fields: { x: "X", y: "Y", w: "Largura", h: "Altura", text: "Texto", size: "Tamanho", color: "Cor", fill: "Preenchimento", align: "Alinhar", valign: "Vertical", font: "Fonte", weight: "Peso", lineHeight: "Entrelinha", uppercase: "Caixa alta", letterSpacing: "Espaçamento", highlight: "Blocos em **palavras**", highlightMode: "Estilo", highlightBlock: "Bloco", highlightText: "Cor no texto", radius: "Raio", opacity: "Opacidade", rotate: "Rotação", stroke: "Borda", fit: "Ajuste", fade: "Degradê na base", useCover: "Usar a foto de capa do carrossel", arrow: "Seta", shape: "Forma" },
     colorHint: "Token da paleta (bg, fg, accent, muted, accent2), auto, token@0.5 ou #hex",
     unsaved: "Alterações não salvas",
     back: "Meus templates",
@@ -330,12 +330,12 @@ const pt = {
 export type Dictionary = typeof pt;
 
 const en: Dictionary = {
-  brand: "CarrosseisIA",
+  brand: "Desliza IA",
   nav: { templates: "Templates", pricing: "Pricing", mcp: "MCP / Claude", login: "Log in", signup: "Start free", app: "My studio" },
   hero: {
-    kicker: "Instagram carousels in under a minute",
-    title: "Pick a template, say the topic. AI writes, designs and hands you the PNGs.",
-    subtitle: "Carousels get the most engagement on Instagram. They are also the most work. No Canva, no Figma, no designer: script, art and download, ready to post.",
+    kicker: "Instagram carousels with AI",
+    title: "Ideas that make you stop scrolling.",
+    subtitle: "Pick a template, say the topic. AI writes the script, designs the art and hands you the images ready to post. No Canva, no Figma, no designer.",
     cta: "Create my first carousel",
     cta2: "See templates",
     proof: "30 free credits on signup. No card needed.",
@@ -351,7 +351,7 @@ const en: Dictionary = {
   templates: { title: "A template for every niche", subtitle: "Each one with its own palette, type and layout. Your saved brand model sits on top of any of them.", noAiCover: "no AI cover" },
   mcp: {
     title: "Use it right inside Claude",
-    subtitle: "Connect CarrosseisIA as an MCP connector. You chat, Claude writes the script, our server paints the art and returns the link. Same credits as your account.",
+    subtitle: "Connect Desliza IA as an MCP connector. You chat, Claude writes the script, our server paints the art and returns the link. Same credits as your account.",
     bullets: ["API key generated from your dashboard in one click", "4 tools: list templates, list brand models, check credits, create carousel", "Works in Claude.ai, Claude Code and any MCP client"],
     cta: "Generate my key",
   },
@@ -377,7 +377,7 @@ const en: Dictionary = {
       { q: "How do I connect Claude?", a: "Generate a key in My studio > API key, copy the connector URL and paste it into Settings > Connectors in Claude. Then just ask for a carousel." },
     ],
   },
-  footer: { tagline: "Automated carousels with AI. Made in Brazil.", terms: "Terms", privacy: "Privacy" },
+  footer: { tagline: "Ideas that make you stop scrolling. Made in Brazil.", terms: "Terms", privacy: "Privacy" },
   auth: {
     loginTitle: "Welcome back",
     signupTitle: "Create your account",
@@ -488,7 +488,7 @@ const en: Dictionary = {
     created: "Key created. Copy it now: it will not be shown again.",
     revoke: "Revoke",
     howto: "How to connect",
-    steps: ["In Claude.ai, open Settings > Connectors > Add custom connector.", "Paste the URL below as the MCP server address. No OAuth needed.", "In Claude Code: claude mcp add --transport http carrosseisia <URL>", "Ask: 'create a carousel about X using the marketing template'."],
+    steps: ["In Claude.ai, open Settings > Connectors > Add custom connector.", "Paste the URL below as the MCP server address. No OAuth needed.", "In Claude Code: claude mcp add --transport http deslizaia <URL>", "Ask: 'create a carousel about X using the marketing template'."],
     empty: "No keys yet.",
   },
   models: {
@@ -603,7 +603,7 @@ const en: Dictionary = {
     lock: "Lock",
     hide: "Hide",
     upload: "Upload image",
-    fields: { x: "X", y: "Y", w: "Width", h: "Height", text: "Text", size: "Size", color: "Color", fill: "Fill", align: "Align", valign: "Vertical", font: "Font", weight: "Weight", lineHeight: "Line height", uppercase: "Uppercase", letterSpacing: "Letter spacing", highlight: "Blocks on **words**", radius: "Radius", opacity: "Opacity", rotate: "Rotation", stroke: "Border", fit: "Fit", fade: "Bottom fade", useCover: "Use the carousel cover photo", arrow: "Arrow", shape: "Shape" },
+    fields: { x: "X", y: "Y", w: "Width", h: "Height", text: "Text", size: "Size", color: "Color", fill: "Fill", align: "Align", valign: "Vertical", font: "Font", weight: "Weight", lineHeight: "Line height", uppercase: "Uppercase", letterSpacing: "Letter spacing", highlight: "Blocks on **words**", highlightMode: "Style", highlightBlock: "Block", highlightText: "Text color", radius: "Radius", opacity: "Opacity", rotate: "Rotation", stroke: "Border", fit: "Fit", fade: "Bottom fade", useCover: "Use the carousel cover photo", arrow: "Arrow", shape: "Shape" },
     colorHint: "Palette token (bg, fg, accent, muted, accent2), auto, token@0.5 or #hex",
     unsaved: "Unsaved changes",
     back: "My templates",

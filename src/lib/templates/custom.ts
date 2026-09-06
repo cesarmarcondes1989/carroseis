@@ -10,7 +10,15 @@ export const USER_PREFIX = "user:";
 /** Catálogo de templates (banco, com fallback no registro em código). */
 export async function listTemplates(): Promise<Template[]> {
   const { data } = await adminClient().from("templates").select("*").eq("active", true).order("sort_order");
-  return data && data.length ? (data as Template[]) : TEMPLATES;
+  if (!data || !data.length) return TEMPLATES;
+  // O banco manda em nome, descrição e ordem; camadas (templates por layers) vivem no código.
+  // Templates novos no código que ainda não estão no banco entram também, na posição do sort_order.
+  const rows = (data as Template[]).map((r) => {
+    const code = TEMPLATES.find((t) => t.id === r.id);
+    return code?.layers && !r.layers ? { ...r, layers: code.layers, fonts: r.fonts ?? code.fonts } : r;
+  });
+  const missing = TEMPLATES.filter((t) => !rows.some((r) => r.id === t.id));
+  return [...rows, ...missing].sort((a, b) => a.sort_order - b.sort_order);
 }
 
 export type UserTemplateRow = {

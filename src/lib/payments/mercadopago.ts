@@ -24,14 +24,14 @@ export async function createCheckout(profile: Profile, plan: Plan) {
 
   const pref = await new Preference(mp()).create({
     body: {
-      items: [{ id: plan.id, title: `CarrosseisIA · Plano ${plan.name} (${plan.credits} créditos)`, quantity: 1, unit_price: plan.price_cents / 100, currency_id: "BRL" }],
+      items: [{ id: plan.id, title: `Desliza IA · Plano ${plan.name} (${plan.credits} créditos)`, quantity: 1, unit_price: plan.price_cents / 100, currency_id: "BRL" }],
       payer: { email: profile.email, name: profile.full_name ?? undefined },
       external_reference: payment.id,
       metadata: { payment_id: payment.id, user_id: profile.id, plan_id: plan.id },
       back_urls: { success: appUrl("/app/creditos?pago=ok"), pending: appUrl("/app/creditos?pago=pendente"), failure: appUrl("/app/creditos?pago=falha") },
       auto_return: "approved",
       notification_url: appUrl("/api/webhooks/mercadopago"),
-      statement_descriptor: "CARROSSEISIA",
+      statement_descriptor: "DESLIZAIA",
     },
   });
   await db.from("payments").update({ preference_id: pref.id }).eq("id", payment.id);

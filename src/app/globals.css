@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
 /* Fontes usadas nas artes (mesmos arquivos que o Satori usa no servidor) */
+@font-face { font-family: "Sora"; src: url("/fonts/Sora-Regular.woff"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Sora"; src: url("/fonts/Sora-ExtraBold.woff"); font-weight: 700; font-display: swap; }
 @font-face { font-family: "Inter"; src: url("/fonts/Inter-Regular.ttf"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "Inter"; src: url("/fonts/Inter-ExtraBold.ttf"); font-weight: 700; font-display: swap; }
 @font-face { font-family: "Montserrat"; src: url("/fonts/Montserrat-Regular.ttf"); font-weight: 400; font-display: swap; }
@@ -17,17 +19,19 @@
 @font-face { font-family: "Anton"; src: url("/fonts/Anton-Regular.ttf"); font-weight: 400 700; font-display: swap; }
 
 :root {
-  --bg: #07070a;
-  --bg-2: #0e0e13;
-  --bg-3: #15151c;
-  --fg: #f4f4f5;
+  /* Marca Desliza IA: preto profundo, violeta (inovação), ciano (tecnologia), lima (energia) */
+  --bg: #0b0b0f;
+  --bg-2: #111118;
+  --bg-3: #181822;
+  --fg: #f8fafc;
   --fg-2: #a1a1aa;
-  --fg-3: #63636e;
-  --line: #24242c;
-  --lime: #d4ff3f;
-  --lime-2: #a3e635;
-  --violet: #8b5cf6;
-  --pink: #f472b6;
+  --fg-3: #6b6b78;
+  --line: #24242f;
+  --lime: #a3e635;
+  --lime-2: #bef264;
+  --violet: #7c3aed;
+  --cyan: #22d3ee;
+  --pink: #22d3ee;
   --danger: #f43f5e;
   --ok: #34d399;
 }
@@ -43,11 +47,12 @@
   --color-lime: var(--lime);
   --color-lime-2: var(--lime-2);
   --color-violet: var(--violet);
+  --color-cyan: var(--cyan);
   --color-pink: var(--pink);
   --color-danger: var(--danger);
   --color-ok: var(--ok);
-  --font-sans: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Sora", "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 html { color-scheme: dark; }
@@ -58,12 +63,17 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 ::selection { background: var(--lime); color: #0a0a0a; }
+/* Gradiente da marca: violeta → ciano → lima (o chevron duplo do logo) */
+.brand-gradient { background: linear-gradient(100deg, var(--violet) 0%, var(--cyan) 50%, var(--lime) 100%); }
+.text-gradient { background: linear-gradient(100deg, var(--violet) 0%, var(--cyan) 50%, var(--lime) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.underline-brand { position: relative; display: inline-block; }
+.underline-brand::after { content: ""; position: absolute; left: 0; right: 0; bottom: -0.08em; height: 0.16em; border-radius: 999px; background: var(--lime); transform: rotate(-1.2deg); opacity: 0.95; }
 
 .glow {
   background:
-    radial-gradient(60% 50% at 20% 0%, rgba(212, 255, 63, 0.18), transparent 60%),
-    radial-gradient(50% 40% at 90% 10%, rgba(139, 92, 246, 0.25), transparent 60%),
-    radial-gradient(40% 40% at 60% 100%, rgba(244, 114, 182, 0.12), transparent 60%);
+    radial-gradient(60% 50% at 15% 0%, rgba(124, 58, 237, 0.30), transparent 60%),
+    radial-gradient(50% 40% at 90% 10%, rgba(34, 211, 238, 0.16), transparent 60%),
+    radial-gradient(40% 40% at 60% 100%, rgba(163, 230, 53, 0.10), transparent 60%);
 }
 .grid-bg {
   background-image: linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);

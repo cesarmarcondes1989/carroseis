@@ -3,7 +3,7 @@ import * as cheerio from "cheerio";
 
 export type Extracted = { title: string; text: string; source: "url" | "youtube" | "pdf" };
 
-const UA = "Mozilla/5.0 (compatible; CarrosseisIA/1.0; +https://carrosseisia.com.br)";
+const UA = "Mozilla/5.0 (compatible; DeslizaIA/1.0; +https://desliza.ia)";
 
 export function isYoutube(url: string) {
   return /(?:youtube\.com|youtu\.be)\//i.test(url);

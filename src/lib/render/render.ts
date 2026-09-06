@@ -27,7 +27,8 @@ export async function renderSlidePng(input: RenderInput, index: number): Promise
     total: input.slides.length,
     aspect: input.aspect,
     style: input.style,
-    coverImage: index === 0 || input.seamless ? input.coverImage : null,
+    // Templates por camadas decidem sozinhos em que card a foto entra (camada "useCover").
+    coverImage: index === 0 || input.seamless || input.template.layers ? input.coverImage : null,
     authorName: input.authorName,
     avatarUrl: input.avatarUrl,
     seamless: input.seamless,

@@ -71,7 +71,7 @@ export function ApiKeys({ keys, appUrl }: { keys: ApiKey[]; appUrl: string }) {
           {t.keys.steps.map((s) => <li key={s}>{s.replace("<URL>", `${base}/api/mcp/<chave>`)}</li>)}
         </ol>
         <pre className="mt-4 overflow-x-auto rounded-xl bg-black/50 p-3 font-mono text-xs text-fg-2">{`# Claude Code
-claude mcp add --transport http carrosseisia ${base}/api/mcp/cia_SUA_CHAVE
+claude mcp add --transport http deslizaia ${base}/api/mcp/cia_SUA_CHAVE
 
 # Qualquer cliente MCP (Streamable HTTP)
 POST ${base}/api/mcp

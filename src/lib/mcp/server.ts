@@ -8,7 +8,7 @@ import { InsufficientCredits, planActive } from "@/lib/credits";
 import { appUrl, createCarousel, createSeries, listBrandModels, renderCarousel } from "@/lib/carousel-service";
 import { listTemplatesFor } from "@/lib/templates/custom";
 
-const INSTRUCTIONS = `O CarrosseisIA transforma um roteiro escrito em um carrossel pronto pro Instagram.
+const INSTRUCTIONS = `O Desliza IA transforma um roteiro escrito em um carrossel pronto pro Instagram.
 
 Fluxo: 1) chame listar_modelos e listar_templates; 2) escreva o roteiro; 3) PERGUNTE as duas coisas abaixo; 4) chame criar_carrossel; 5) entregue o link. Se a pessoa quer vários carrosséis sobre um tema (série, semana de conteúdo), use criar_serie: o app planeja e escreve os episódios.\n\nROTEIRO QUE É SALVO: capa até 8 palavras (número, pergunta ou promessa); cada card do meio com UMA ideia, título até 8 palavras e texto de 1 a 2 frases (até 20 palavras no card); 7 a 10 cards; último card pede explicitamente pra SALVAR e mandar pra alguém. O app devolve um Score de Save de 0 a 100.
 
@@ -25,14 +25,14 @@ Escreva sem travessão: use vírgula, ponto ou dois-pontos. Palavras entre **ast
 Fotos não passam pelo chat: a pessoa sobe no link que você entregar.`;
 
 export function buildMcpServer(profile: Profile) {
-  const server = new McpServer({ name: "carrosseisia", version: "1.0.0" }, { instructions: INSTRUCTIONS });
+  const server = new McpServer({ name: "deslizaia", version: "1.0.0" }, { instructions: INSTRUCTIONS });
 
   server.registerTool(
     "listar_templates",
     { description: "Lista os templates disponíveis (id, nome, pra que serve, se aceita capa por IA). Use o id no parâmetro 'template' de criar_carrossel.", inputSchema: {} },
     async () => {
       const list = await listTemplatesFor(profile.id);
-      const text = [`Templates do CarrosseisIA (${list.length}):`, "", ...list.map((t) => `- ${t.id} (${t.name})${t.custom ? " [SEU template, feito no editor]" : ""}${t.supports_ai_cover ? "" : " [sem capa por IA]"}: ${t.description}`), "", "Use o id da esquerda no parâmetro 'template' de criar_carrossel. Templates do usuário começam com 'user:'."].join("\n");
+      const text = [`Templates do Desliza IA (${list.length}):`, "", ...list.map((t) => `- ${t.id} (${t.name})${t.custom ? " [SEU template, feito no editor]" : ""}${t.supports_ai_cover ? "" : " [sem capa por IA]"}: ${t.description}`), "", "Use o id da esquerda no parâmetro 'template' de criar_carrossel. Templates do usuário começam com 'user:'."].join("\n");
       return { content: [{ type: "text", text }] };
     },
   );

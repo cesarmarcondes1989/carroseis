@@ -1,10 +1,12 @@
 import type { Template } from "@/lib/types";
+import { DESLIZA } from "@/lib/layers/presets";
 
 /**
  * Catálogo de templates. O banco (tabela public.templates) é a fonte de verdade em produção
  * e pode ser editado pelo admin; esta cópia serve de fallback e de tipagem.
  */
 export const TEMPLATES: Template[] = [
+  { id: "desliza", name: "Desliza IA", description: "O template da casa: foto de fundo em fade pro preto, número do card, manchete grande em Sora com a palavra-chave em cor, seta pra deslizar. Curiosidade, tecnologia, negócios, história. Palavras entre **asteriscos** ganham cor.", description_en: "The house template: photo fading to black, card number, big Sora headline with the key word in color, swipe arrow. **Words** in asterisks get the accent color.", category: "geral", layout: "niche", palette: { bg: "#0b0b0f", fg: "#f8fafc", accent: "#a3e635", muted: "#c4c4cc", accent2: "#7c3aed" }, fonts: { display: "Sora", body: "Inter" }, supports_ai_cover: true, sort_order: 0, layers: DESLIZA },
   { id: "post-social", name: "Post / Rede Social", description: "Frase de impacto, opinião, print de rede social. 100% tipográfico, sem capa por IA, sai mais barato. Aceita o nome do perfil.", description_en: "Punchy quote, opinion, social-post screenshot. Typography only, no AI cover, cheaper.", category: "geral", layout: "social", palette: { bg: "#0b0b0f", fg: "#ffffff", accent: "#1d9bf0", muted: "#8b98a5", accent2: "#16181c" }, fonts: { display: "Inter", body: "Inter" }, supports_ai_cover: false, sort_order: 1 },
   { id: "insider", name: "Insider", description: "Bastidor, método, 'como eu faço'. Visual editorial premium, título em caixa alta. Escolha fundo preto ou branco.", description_en: "Behind the scenes, method, how-I-do-it. Premium editorial look, uppercase titles.", category: "geral", layout: "insider", palette: { bg: "#0a0a0a", fg: "#f5f5f4", accent: "#d4ff3f", muted: "#a3a3a3", accent2: "#171717" }, fonts: { display: "Bebas Neue", body: "Space Grotesk" }, supports_ai_cover: true, sort_order: 2 },
   { id: "essencial", name: "Essencial", description: "Autoridade e marca pessoal: a capa leva a identidade do perfil (foto, nome e selo) por cima da foto, com a manchete grande embaixo.", description_en: "Authority and personal brand: the cover carries your profile identity over the photo, headline below.", category: "geral", layout: "identity", palette: { bg: "#101014", fg: "#ffffff", accent: "#f5c518", muted: "#b3b3b3", accent2: "#1c1c22" }, fonts: { display: "Montserrat", body: "Inter" }, supports_ai_cover: true, sort_order: 3 },
@@ -45,6 +47,7 @@ export function pickTemplate(list: Template[], c: { template_id: string; user_te
 
 /** Fontes disponíveis para render (arquivos em public/fonts). */
 export const FONT_FILES: Record<string, { regular: string; bold: string }> = {
+  Sora: { regular: "Sora-Regular.woff", bold: "Sora-ExtraBold.woff" },
   Inter: { regular: "Inter-Regular.ttf", bold: "Inter-ExtraBold.ttf" },
   Montserrat: { regular: "Montserrat-Regular.ttf", bold: "Montserrat-Black.ttf" },
   "Space Grotesk": { regular: "SpaceGrotesk-Regular.ttf", bold: "SpaceGrotesk-Bold.ttf" },

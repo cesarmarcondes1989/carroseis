@@ -1,4 +1,4 @@
-# CarrosseisIA
+# Desliza IA
 
 Gerador de carrosséis para Instagram com IA. Você escolhe o template e diz o tema (ou cola um link, um vídeo do YouTube ou um PDF). A IA escreve o roteiro, o app pinta a arte e entrega os PNGs. Também funciona como **conector MCP** dentro do Claude.
 
@@ -57,6 +57,12 @@ Rode `supabase/migrations/0005_user_templates.sql`. Quem tem plano **Agência** 
 Textos das camadas aceitam `{titulo}`, `{texto}`, `{etiqueta}`, `{handle}`, `{index}`, `{total}` e `{n}`; cores aceitam tokens da paleta (`bg`, `fg`, `accent`, `muted`, `accent2`, `auto`), `token@alpha`, hex ou string de gradiente.
 
 A aba **Agente** manda uma instrução em linguagem natural (ex.: "capa mais ousada, título maior e etiqueta no canto") pro designer de IA (`designAgent` no provider, modelo `OPENAI_DESIGN_MODEL` ou o de texto); a resposta é validada com zod antes de entrar no editor e pode ser desfeita. Pra conferir os presets localmente através do Satori: `npx tsx scripts/layers-test.ts` gera PNGs em `/tmp/layers`.
+
+## Marca Desliza IA
+
+Paleta: fundo `#0B0B0F`, violeta `#7C3AED` (inovação), ciano `#22D3EE` (tecnologia), lima `#A3E635` (energia), texto `#F8FAFC`. Fontes: Sora (títulos) e Inter (texto), servidas de `public/fonts` (Sora em woff, do fontsource). O símbolo é o chevron duplo com o gradiente violeta → ciano → lima (`BrandMark` em `components/ui.tsx`, favicon em `app/icon.svg`). Utilitários CSS: `.brand-gradient`, `.text-gradient`, `.underline-brand`.
+
+Template da casa `desliza` (rode `supabase/migrations/0007_desliza.sql` pra ele existir no banco, já que carrosséis apontam pro template por chave estrangeira): foto em fade pro preto, número do card, manchete em Sora com a palavra entre **asteriscos** em lima (modo `highlightMode: "color"` das camadas), seta pra deslizar, CTA em violeta. As camadas ficam em `lib/layers/presets.ts` (`DESLIZA`) e também aparecem como preset no editor. `npx tsx scripts/desliza-test.ts` renderiza um exemplo. Templates por camadas recebem a foto de capa em todos os cards (cada camada decide se usa).
 
 ## Roteiro pra ser salvo e Score de Save
 

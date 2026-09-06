@@ -15,6 +15,7 @@ const EN: Record<string, Slide> = {
   news: { titulo: "City announces **change** to 2027 property tax", texto: "What it means for you.", etiqueta: "Breaking" },
 };
 const NICHE: Record<string, Slide> = {
+  desliza: { titulo: "O que aconteceria se a **Terra** parasse de girar?", texto: "Os efeitos seriam mais insanos do que você imagina.", etiqueta: "Curiosidades" },
   advocacia: { titulo: "Demitido sem justa causa? Você tem **7 direitos**", texto: "E a maioria não cobra nenhum.", etiqueta: "Direito do trabalho" },
   marketing: { titulo: "5 erros que fazem seu **anúncio** queimar dinheiro", texto: "E como consertar cada um hoje.", etiqueta: "Tráfego pago" },
   ia: { titulo: "3 ferramentas de **IA** que substituem um estagiário", texto: "E custam menos que um café.", etiqueta: "IA" },

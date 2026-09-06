@@ -15,7 +15,7 @@ async function handle(req: Request, keyFromPath?: string) {
   const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   const profile = await resolveApiKey(keyFromPath || bearer);
   if (!profile) {
-    return Response.json({ jsonrpc: "2.0", error: { code: -32001, message: "Chave API inválida ou revogada." }, id: null }, { status: 401, headers: { "WWW-Authenticate": 'Bearer realm="carrosseisia"' } });
+    return Response.json({ jsonrpc: "2.0", error: { code: -32001, message: "Chave API inválida ou revogada." }, id: null }, { status: 401, headers: { "WWW-Authenticate": 'Bearer realm="deslizaia"' } });
   }
   const server = buildMcpServer(profile);
   const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined });

@@ -4,18 +4,29 @@ import Link from "next/link";
 import { useState } from "react";
 import { setLocaleCookie, useI18n } from "@/lib/i18n/client";
 
-export function Logo({ className }: { className?: string }) {
+export function Logo({ className, compact = false }: { className?: string; compact?: boolean }) {
   return (
-    <Link href="/" className={clsx("inline-flex items-center gap-2 font-display text-lg font-bold tracking-tight", className)}>
-      <span className="grid h-7 w-7 place-items-center rounded-lg bg-lime text-black">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-          <rect x="3" y="5" width="12" height="14" rx="2" />
-          <path d="M18 8v8" />
-          <path d="M21 10v4" />
-        </svg>
-      </span>
-      Carrosseis<span className="text-lime">IA</span>
+    <Link href="/" className={clsx("inline-flex items-center gap-2 font-display text-lg font-bold tracking-tight", className)} aria-label="Desliza IA">
+      <BrandMark size={28} />
+      {compact ? null : <span className="whitespace-nowrap">desliza <span className="text-gradient">IA</span></span>}
     </Link>
+  );
+}
+
+/** Chevron duplo com o gradiente da marca (violeta → ciano → lima). */
+export function BrandMark({ size = 28, className }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
+      <defs>
+        <linearGradient id="dz-g" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#7c3aed" />
+          <stop offset="0.5" stopColor="#22d3ee" />
+          <stop offset="1" stopColor="#a3e635" />
+        </linearGradient>
+      </defs>
+      <path d="M8 12l12 12-12 12" stroke="url(#dz-g)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M24 8l16 16-16 16" stroke="url(#dz-g)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 

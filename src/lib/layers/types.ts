@@ -40,6 +40,8 @@ export const textLayerSchema = z.object({
   letterSpacing: z.number().min(-20).max(40).optional(),
   highlight: z.boolean().optional(),
   highlightColor: z.string().max(40).optional(),
+  /** "block" pinta um bloco atrás da palavra; "color" só troca a cor do texto. */
+  highlightMode: z.enum(["block", "color"]).optional(),
 });
 
 export const shapeLayerSchema = z.object({

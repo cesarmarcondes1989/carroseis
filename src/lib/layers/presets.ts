@@ -135,8 +135,53 @@ export const NEWS: LayerTemplate = {
   ],
 };
 
+
+/** Desliza IA: foto em fade pro preto, número, manchete Sora com palavra em cor, seta pra deslizar. */
+const dzFooter = (): Layer[] => [
+  { id: "handle", type: "text", text: "{handle}", font: "body", size: 26, weight: 700, color: "muted@0.8", align: "left", valign: "bottom", lineHeight: 1, x: PAD, y: h - PAD - 44, w: 500, h: 44, name: "@" },
+  { id: "seta-bg", type: "shape", shape: "circle", fill: "fg@0.12", strokeWidth: 3, stroke: "fg@0.5", x: w - PAD - 84, y: h - PAD - 84, w: 84, h: 84, name: "Seta (fundo)" },
+  { id: "seta", type: "text", text: "→", font: "body", size: 44, weight: 700, color: "fg", align: "center", valign: "middle", lineHeight: 1, x: w - PAD - 84, y: h - PAD - 84, w: 84, h: 84, name: "Seta" },
+];
+const dzNumber = (size: number): Layer[] => [
+  { id: "num", type: "text", text: "{n}", font: "display", size, weight: 700, color: "fg", align: "left", valign: "top", lineHeight: 1, x: PAD, y: PAD, w: 200, h: size + 10, name: "Número" },
+];
+export const DESLIZA: LayerTemplate = {
+  cover: [
+    { id: "bg", type: "shape", shape: "rect", fill: "linear-gradient(170deg, accent2@0.55 0%, bg 48%, bg 100%)", x: 0, y: 0, w, h, locked: true, name: "Fundo" },
+    { id: "glow", type: "shape", shape: "circle", fill: "accent2@0.35", x: w - 520, y: -260, w: 760, h: 760, name: "Brilho violeta" },
+    { id: "foto", type: "image", src: null, useCover: true, fit: "cover", fade: "bg", x: 0, y: 0, w, h: h * 0.78, name: "Capa do carrossel" },
+    { id: "fade2", type: "shape", shape: "rect", fill: "linear-gradient(180deg, bg@0 0%, bg@0.85 55%, bg 100%)", x: 0, y: h * 0.4, w, h: h * 0.6, locked: true, name: "Fade inferior" },
+    ...dzNumber(40),
+    { id: "titulo", type: "text", text: "{titulo}", font: "display", size: 92, weight: 700, color: "fg", align: "left", valign: "bottom", lineHeight: 1.05, highlight: true, highlightMode: "color", highlightColor: "accent", x: PAD, y: 560, w: inner, h: 480 },
+    { id: "texto", type: "text", text: "{texto}", font: "body", size: 34, weight: 400, color: "muted", align: "left", valign: "top", lineHeight: 1.3, x: PAD, y: 1064, w: inner - 120, h: 110 },
+    ...dzFooter(),
+  ],
+  inner: [
+    { id: "bg", type: "shape", shape: "rect", fill: "bg", x: 0, y: 0, w, h, locked: true, name: "Fundo" },
+    { id: "glow", type: "shape", shape: "circle", fill: "accent2@0.22", x: -300, y: h - 500, w: 700, h: 700, name: "Brilho violeta" },
+    { id: "foto", type: "image", src: null, useCover: true, fit: "cover", fade: "bg", opacity: 0.5, x: 0, y: 0, w, h: h * 0.6, name: "Capa do carrossel" },
+    { id: "fade2", type: "shape", shape: "rect", fill: "linear-gradient(180deg, bg@0 0%, bg@0.9 60%, bg 100%)", x: 0, y: h * 0.25, w, h: h * 0.5, locked: true, name: "Fade inferior" },
+    ...dzNumber(40),
+    { id: "etq", type: "text", text: "{etiqueta}", font: "body", size: 26, weight: 700, color: "accent", align: "left", valign: "top", lineHeight: 1, uppercase: true, letterSpacing: 3, x: PAD, y: 600, w: inner, h: 36 },
+    { id: "titulo", type: "text", text: "{titulo}", font: "display", size: 72, weight: 700, color: "fg", align: "left", valign: "top", lineHeight: 1.08, highlight: true, highlightMode: "color", highlightColor: "accent", x: PAD, y: 652, w: inner, h: 320 },
+    { id: "texto", type: "text", text: "{texto}", font: "body", size: 36, weight: 400, color: "muted", align: "left", valign: "top", lineHeight: 1.35, x: PAD, y: 930, w: inner - 120, h: 230 },
+    ...dzFooter(),
+  ],
+  last: [
+    { id: "bg", type: "shape", shape: "rect", fill: "linear-gradient(160deg, accent2 0%, #4c1d95 45%, bg 100%)", x: 0, y: 0, w, h, locked: true, name: "Fundo" },
+    { id: "glow", type: "shape", shape: "circle", fill: "#22d3ee@0.25", x: w - 560, y: h - 620, w: 820, h: 820, name: "Brilho ciano" },
+    { id: "chev1", type: "text", text: "»", font: "display", size: 200, weight: 700, color: "accent", align: "left", valign: "top", lineHeight: 1, x: PAD - 10, y: 300, w: 300, h: 220, name: "Chevron" },
+    { id: "titulo", type: "text", text: "{titulo}", font: "display", size: 84, weight: 700, color: "fg", align: "left", valign: "top", lineHeight: 1.05, highlight: true, highlightMode: "color", highlightColor: "accent", x: PAD, y: 540, w: inner, h: 380 },
+    { id: "texto", type: "text", text: "{texto}", font: "body", size: 36, weight: 400, color: "fg@0.8", align: "left", valign: "top", lineHeight: 1.35, x: PAD, y: 940, w: inner - 120, h: 200 },
+    { id: "risco", type: "shape", shape: "rect", fill: "accent", radius: 6, x: PAD, y: 1150, w: 220, h: 10, name: "Risco lima" },
+    { id: "handle", type: "text", text: "{handle}", font: "body", size: 26, weight: 700, color: "fg@0.8", align: "left", valign: "bottom", lineHeight: 1, x: PAD, y: h - PAD - 44, w: 500, h: 44, name: "@" },
+    { id: "pages", type: "pagination", x: w - PAD - 300, y: h - PAD - 40, w: 300, h: 40, color: "fg@0.4", activeColor: "accent", arrow: false },
+  ],
+};
+
 export const PRESETS: { id: string; name: string; description: string; base: string; layers: LayerTemplate }[] = [
   { id: "clean", name: "Tela em branco", description: "Só título, texto e rodapé. Monte do zero.", base: "marketing", layers: CLEAN_SHEET },
+  { id: "desliza", name: "Desliza IA", description: "Foto em fade pro preto, número, manchete com palavra em cor, seta.", base: "desliza", layers: DESLIZA },
   { id: "niche", name: "Nicho", description: "Pílula, título grande, número em bloco e CTA em destaque.", base: "marketing", layers: NICHE },
   { id: "insider", name: "Insider", description: "Editorial, caixa alta, traço de destaque.", base: "insider", layers: INSIDER },
   { id: "fulltext", name: "Full texto", description: "Texto gigante, sem imagem.", base: "full-texto", layers: FULLTEXT },

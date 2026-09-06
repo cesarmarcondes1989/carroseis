@@ -92,7 +92,13 @@ export function LayerProps({ layer, palette, fonts, onChange }: { layer: Layer; 
             <label className="flex items-end gap-2 pb-1 text-xs"><input type="checkbox" className="accent-lime" checked={!!layer.uppercase} onChange={(e) => set({ uppercase: e.target.checked })} /> {f.uppercase}</label>
           </div>
           <label className="flex items-center gap-2 text-xs"><input type="checkbox" className="accent-lime" checked={!!layer.highlight} onChange={(e) => set({ highlight: e.target.checked })} /> {f.highlight}</label>
-          {layer.highlight ? <Color label={`${f.highlight} · ${f.color}`} value={layer.highlightColor ?? "accent"} onChange={(v) => set({ highlightColor: v })} palette={palette} hint={t.editor.colorHint} /> : null}
+          {layer.highlight ? (
+            <div className="grid grid-cols-[1fr_auto] gap-2">
+              <Color label={`${f.highlight} · ${f.color}`} value={layer.highlightColor ?? "accent"} onChange={(v) => set({ highlightColor: v })} palette={palette} hint={t.editor.colorHint} />
+              <label className="block text-xs"><span className="text-fg-3">{f.highlightMode}</span>
+                <select className="input mt-0.5 py-1 text-sm" value={layer.highlightMode ?? "block"} onChange={(e) => set({ highlightMode: e.target.value })}><option value="block">{f.highlightBlock}</option><option value="color">{f.highlightText}</option></select></label>
+            </div>
+          ) : null}
         </>
       ) : null}
 

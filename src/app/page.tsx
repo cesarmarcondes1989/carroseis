@@ -33,10 +33,17 @@ async function loadPlans(): Promise<Plan[]> {
   ];
 }
 
+/** Última palavra da manchete ganha o risco lima da marca. */
+function heroTitle(title: string) {
+  const m = title.match(/^(.*\s)(\S+?)([.!?]*)$/);
+  if (!m) return title;
+  return <>{m[1]}<span className="underline-brand">{m[2]}</span>{m[3]}</>;
+}
+
 export default async function Home() {
   const { t, locale } = await getDict();
   const [templates, plans] = await Promise.all([loadTemplates(), loadPlans()]);
-  const heroTemplates = ["marketing", "noticias-virais", "insider", "full-texto", "essencial"].map((id) => templates.find((x) => x.id === id)!).filter(Boolean);
+  const heroTemplates = ["desliza", "marketing", "noticias-virais", "insider", "full-texto"].map((id) => templates.find((x) => x.id === id)!).filter(Boolean);
 
   return (
     <>
@@ -48,7 +55,7 @@ export default async function Home() {
           <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-5 pb-20 pt-16 md:grid-cols-[1.1fr_1fr] md:pt-24">
             <div className="fade-up">
               <span className="pill border border-lime/40 bg-lime/10 text-lime">{t.hero.kicker}</span>
-              <h1 className="mt-5 font-display text-4xl font-bold leading-[1.02] tracking-tight md:text-6xl">{t.hero.title}</h1>
+              <h1 className="mt-5 font-display text-4xl font-bold leading-[1.02] tracking-tight md:text-6xl">{heroTitle(t.hero.title)}</h1>
               <p className="mt-6 max-w-xl text-lg text-fg-2">{t.hero.subtitle}</p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link href="/cadastro" className="btn btn-primary text-base">{t.hero.cta} →</Link>
@@ -138,7 +145,7 @@ export default async function Home() {
               <div className="mt-3"><span className="text-lime">claude:</span> Quer colocar seu @ na arte? A capa vai ser por IA (10 créditos) ou foto sua?</div>
               <div className="mt-3"><span className="text-pink">você:</span> @cesar, capa por IA, cena: mesa de escritório com notebook e café</div>
               <div className="mt-3"><span className="text-lime">claude:</span> <span className="text-fg-3">→ criar_carrossel(...)</span></div>
-              <div className="mt-1 text-fg">Carrossel criado: 7 cards. Link pra ver, ajustar e baixar: carrosseisia.com.br/app/c/…</div>
+              <div className="mt-1 text-fg">Carrossel criado: 7 cards. Link pra ver, ajustar e baixar: desliza.ia/app/c/…</div>
             </div>
           </div>
         </section>

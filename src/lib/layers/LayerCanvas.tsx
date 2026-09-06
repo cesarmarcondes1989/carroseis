@@ -47,7 +47,8 @@ function TextBlock({ layer, ctx, text }: { layer: TextLayer; ctx: LayerCtx; text
   const size = layer.size * s;
   const color = resolveColor(layer.color, ctx.palette);
   const hlBg = resolveColor(layer.highlightColor ?? "accent", ctx.palette);
-  const hlFg = isLight(hlBg) ? "#0a0a0a" : "#ffffff";
+  const colorMode = layer.highlightMode === "color";
+  const hlFg = colorMode ? hlBg : isLight(hlBg) ? "#0a0a0a" : "#ffffff";
   const justify = layer.align === "center" ? "center" : layer.align === "right" ? "flex-end" : "flex-start";
   const alignY = layer.valign === "middle" ? "center" : layer.valign === "bottom" ? "flex-end" : "flex-start";
   const lines = text.split(/\n/);
@@ -70,11 +71,11 @@ function TextBlock({ layer, ctx, text }: { layer: TextLayer; ctx: LayerCtx; text
                   fontSize: size,
                   fontWeight: layer.weight,
                   color: hl ? hlFg : color,
-                  backgroundColor: hl ? hlBg : "transparent",
+                  backgroundColor: hl && !colorMode ? hlBg : "transparent",
                   lineHeight: layer.lineHeight,
-                  padding: hl ? `0 ${clip(size * 0.14)}px` : 0,
+                  padding: hl && !colorMode ? `0 ${clip(size * 0.14)}px` : 0,
                   marginRight: clip(size * 0.26),
-                  marginBottom: hl ? clip(size * 0.12) : 0,
+                  marginBottom: hl && !colorMode ? clip(size * 0.12) : 0,
                   letterSpacing: (layer.letterSpacing ?? -size * 0.02 / s) * s,
                   textTransform: layer.uppercase ? "uppercase" : "none",
                 }}
