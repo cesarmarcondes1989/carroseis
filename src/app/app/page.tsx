@@ -2,8 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDict } from "@/lib/i18n/server";
 import { getSession } from "@/lib/supabase/server";
-import { listTemplates } from "@/lib/carousel-service";
-import { getTemplate } from "@/lib/templates/registry";
+import { listTemplatesFor } from "@/lib/templates/custom";
+import { pickTemplate } from "@/lib/templates/registry";
 import { resolveStyle } from "@/lib/render/Slide";
 import { SlidePreview } from "@/components/SlidePreview";
 import type { Carousel } from "@/lib/types";
@@ -13,8 +13,9 @@ export const dynamic = "force-dynamic";
 export default async function Projects() {
   const { t } = await getDict();
   const { supabase, profile } = await getSession();
-  if (profile && !profile.onboarded_at) redirect("/app/comecar");
-  const [{ data }, templates] = await Promise.all([supabase.from("carousels").select("*").order("created_at", { ascending: false }).limit(60), listTemplates()]);
+  if (!profile) redirect("/login?next=/app");
+  if (!profile.onboarded_at) redirect("/app/comecar");
+  const [{ data }, templates] = await Promise.all([supabase.from("carousels").select("*").order("created_at", { ascending: false }).limit(60), listTemplatesFor(profile.id)]);
   const carousels = (data as Carousel[]) ?? [];
 
   return (
@@ -32,7 +33,7 @@ export default async function Projects() {
       ) : (
         <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
           {carousels.map((c) => {
-            const tpl = getTemplate(c.template_id, templates);
+            const tpl = pickTemplate(templates, c);
             const style = resolveStyle(tpl, c.brand_overrides, c.instagram_handle);
             const first = c.slides?.[0] ?? { titulo: c.title };
             return (

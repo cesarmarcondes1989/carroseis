@@ -72,3 +72,35 @@ export function parseSuggest(raw: string, validIds: string[]): import("./provide
   if (topics.length < 3) throw new Error("A IA não devolveu 3 temas.");
   return { templateId, topics, why: clean(data.why ?? "") };
 }
+
+export function designPrompt(req: import("./provider").DesignRequest) {
+  const lang = req.locale === "en" ? "English" : "Português do Brasil";
+  const roleName = { cover: "CAPA (primeiro card)", inner: "CARD DO MEIO", last: "CTA (último card)" }[req.role];
+  return `Você é um designer de carrosséis para Instagram operando um editor por camadas. Responda em ${lang}.
+Canvas: 1080 x 1350 (origem no canto superior esquerdo; o formato 1:1 comprime a altura automaticamente). Margem segura: 80px.
+Prancha em edição: ${roleName}.
+
+Cada camada é um objeto JSON com x, y, w, h (pixels), opacity (0-1), rotate (graus), hidden, e por tipo:
+- text: text (pode usar vínculos {titulo} {texto} {etiqueta} {handle} {index} {total} {n}), font ("display" ou "body"), size (px), weight (400|700), color, align (left|center|right), valign (top|middle|bottom), lineHeight, uppercase, letterSpacing, highlight (palavras entre **asteriscos** ganham bloco de cor), highlightColor
+- shape: shape (rect|circle|line), fill, radius, stroke, strokeWidth
+- pill: text, fill, color, size, font
+- image: src (URL) ou useCover (foto de capa do carrossel), fit (cover|contain), radius, fade (cor do degradê na base)
+- pagination: color, activeColor, arrow
+Cores: tokens da paleta (bg, fg, accent, muted, accent2), "auto" (contraste automático), "token@0.5" (com alpha), ou hex. Gradiente: "linear-gradient(145deg, accent2 0%, bg 55%, accent@0.35 100%)".
+Paleta atual: ${JSON.stringify(req.palette)}. Fontes: título ${req.fonts.display}, texto ${req.fonts.body}.
+
+Camadas atuais:
+${JSON.stringify(req.layers)}
+
+Instrução da pessoa: "${req.instruction}"
+
+Regras: devolva a lista COMPLETA de camadas resultante (as que não mudam vêm iguais, mantenha os ids). Mantenha os vínculos {titulo}/{texto} existentes a não ser que a pessoa peça pra remover. Nada fora do canvas. Ids novos curtos e únicos. Se a pessoa pedir pra mudar cores da marca, devolva também "palette" com os tokens alterados (hex). Explique o que fez em UMA frase curta, sem travessão.
+Responda SOMENTE com JSON: {"layers": [...], "message": string, "palette": {...} | null}`;
+}
+
+export function parseDesign(raw: string): import("./provider").DesignResult {
+  const json = raw.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "");
+  const data = JSON.parse(json) as Partial<import("./provider").DesignResult>;
+  if (!Array.isArray(data.layers)) throw new Error("A IA não devolveu camadas.");
+  return { layers: data.layers as import("./provider").DesignResult["layers"], message: clean(data.message ?? "Feito."), palette: data.palette ?? null };
+}

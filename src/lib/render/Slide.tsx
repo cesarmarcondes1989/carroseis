@@ -2,6 +2,10 @@
 import type { Aspect, BrandOverrides, Palette, Slide as SlideData, Template } from "@/lib/types";
 import { SIZES } from "@/lib/types";
 import type { CSSProperties, ReactNode } from "react";
+import { LayerCanvas } from "@/lib/layers/LayerCanvas";
+import { hexA, isLight } from "@/lib/render/color";
+export { hexA, isLight };
+import { roleFor } from "@/lib/layers/types";
 
 /**
  * Componente de slide compatível com Satori: só div/span/img, inline styles,
@@ -34,13 +38,6 @@ export function resolveStyle(template: Template, overrides?: BrandOverrides | nu
   };
 }
 
-export function isLight(hex: string) {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) return false;
-  const n = parseInt(m[1], 16);
-  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
-  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6;
-}
 
 export type SlideProps = {
   template: Template;
@@ -150,12 +147,6 @@ function CoverImage({ src, gradientTo, strength = 0.85, height = "100%" }: { src
   );
 }
 
-export function hexA(hex: string, a: number) {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) return hex;
-  const n = parseInt(m[1], 16);
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
-}
 
 /**
  * Panorama que atravessa todos os cards: gradiente, formas, título fantasma e foto,
@@ -201,6 +192,15 @@ export function SlideView(props: SlideProps) {
   const root: CSSProperties = { display: "flex", width: w, height: h, position: "relative", overflow: "hidden", backgroundColor: props.style.palette.bg };
   const pano = seamless ? <Panorama style={props.style} index={props.index} total={props.total} w={w} h={h} image={props.coverImage} title={props.carouselTitle} /> : null;
   const layout = (() => {
+    if (props.template.layers) {
+      const role = roleFor(props.index, props.total);
+      return (
+        <LayerCanvas
+          layers={props.template.layers[role]}
+          ctx={{ palette: props.style.palette, fontDisplay: props.style.fontDisplay, fontBody: props.style.fontBody, slide: props.slide, index: props.index, total: props.total, handle: props.style.handle, coverImage: props.coverImage, w, h }}
+        />
+      );
+    }
     switch (props.template.layout) {
       case "social":
         return Social(props);

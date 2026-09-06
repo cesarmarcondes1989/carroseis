@@ -1,5 +1,6 @@
 "use client";
 import { clsx } from "clsx";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n/client";
@@ -12,7 +13,7 @@ import { Alert, Field, Spinner } from "./ui";
 
 type Source = "topic" | "url" | "youtube" | "pdf" | "script";
 
-export function Creator({ templates, models, profile, initialTemplate, initialTopic, initialTone, initialHandle }: { templates: Template[]; models: BrandModel[]; profile: Profile; initialTemplate?: string; initialTopic?: string; initialTone?: string; initialHandle?: string }) {
+export function Creator({ templates, models, profile, initialTemplate, initialTopic, initialTone, initialHandle, canEditTemplates = false }: { templates: Template[]; models: BrandModel[]; profile: Profile; initialTemplate?: string; initialTopic?: string; initialTone?: string; initialHandle?: string; canEditTemplates?: boolean }) {
   const { t, locale } = useI18n();
   const router = useRouter();
   const defaultModel = models.find((m) => m.is_default);
@@ -84,8 +85,9 @@ export function Creator({ templates, models, profile, initialTemplate, initialTo
           <h2 className="text-lg font-bold">{t.create.step1}</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {categories.map((c) => (
-              <button key={c} onClick={() => setFilter(c)} className={clsx("pill border", filter === c ? "border-lime bg-lime/10 text-lime" : "border-line text-fg-2")}>{c === "all" ? "Todos" : c}</button>
+              <button key={c} onClick={() => setFilter(c)} className={clsx("pill border", filter === c ? "border-lime bg-lime/10 text-lime" : "border-line text-fg-2")}>{c === "all" ? "Todos" : c === "meus" ? t.templatesPage.mine : c}</button>
             ))}
+            {canEditTemplates ? <Link href="/app/templates" className="pill border border-violet/50 text-violet">✎ {t.templatesPage.title}</Link> : null}
           </div>
           <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 xl:grid-cols-6">
             {templates.filter((x) => filter === "all" || x.category === filter).map((tpl) => (

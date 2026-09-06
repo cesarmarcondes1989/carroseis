@@ -24,10 +24,22 @@ export type ScriptResult = {
 export type SuggestRequest = { niche: string; goal: string; tone: string; locale: "pt-BR" | "en"; templates: { id: string; name: string; description: string }[] };
 export type SuggestResult = { templateId: string; topics: string[]; why: string };
 
+export type DesignRequest = {
+  instruction: string;
+  role: "cover" | "inner" | "last";
+  layers: import("@/lib/layers/types").Layer[];
+  palette: Record<string, unknown>;
+  fonts: { display: string; body: string };
+  aspect: "4:5" | "1:1";
+  locale: "pt-BR" | "en";
+};
+export type DesignResult = { layers: import("@/lib/layers/types").Layer[]; message: string; palette?: Record<string, string> | null };
+
 export interface AIProvider {
   name: string;
   generateScript(req: ScriptRequest): Promise<ScriptResult>;
   suggest(req: SuggestRequest): Promise<SuggestResult>;
+  designAgent(req: DesignRequest): Promise<DesignResult>;
   /** Devolve PNG/JPEG em Buffer. */
   generateCoverImage(scene: string, aspect: "4:5" | "1:1" | "wide"): Promise<{ buffer: Buffer; mime: string }>;
 }

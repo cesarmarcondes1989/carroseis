@@ -4,13 +4,9 @@ import { getAI } from "@/lib/ai/provider";
 import { consumeCredits, grantCredits, logUsage } from "@/lib/credits";
 import { renderAll, toDataUrl } from "@/lib/render/render";
 import { resolveStyle } from "@/lib/render/Slide";
-import { TEMPLATES, getTemplate } from "@/lib/templates/registry";
-import { CREDIT_COST, type Aspect, type BrandModel, type BrandOverrides, type Carousel, type CarouselSource, type CoverMode, type Profile, type Render, type Slide, type Template } from "@/lib/types";
-
-export async function listTemplates(): Promise<Template[]> {
-  const { data } = await adminClient().from("templates").select("*").eq("active", true).order("sort_order");
-  return data && data.length ? (data as Template[]) : TEMPLATES;
-}
+import { listTemplates, resolveTemplateId, templateForCarousel } from "@/lib/templates/custom";
+export { listTemplates };
+import { CREDIT_COST, type Aspect, type BrandModel, type BrandOverrides, type Carousel, type CarouselSource, type CoverMode, type Profile, type Render, type Slide } from "@/lib/types";
 
 export async function listBrandModels(userId: string): Promise<BrandModel[]> {
   const { data } = await adminClient().from("brand_models").select("*").eq("user_id", userId).order("is_default", { ascending: false }).order("created_at");
@@ -46,8 +42,7 @@ export type CreateInput = {
 /** Cria o registro do carrossel; escreve o roteiro com IA quando não veio pronto. Cobra créditos. */
 export async function createCarousel(input: CreateInput): Promise<Carousel> {
   const db = adminClient();
-  const templates = await listTemplates();
-  const template = getTemplate(input.templateId, templates);
+  const { template, userTemplateId } = await resolveTemplateId(input.templateId, input.profile.id);
   const coverMode: CoverMode = template.supports_ai_cover ? (input.coverMode ?? "none") : input.coverMode === "own" ? "own" : "none";
   const useAI = !input.slides || input.slides.length < 2;
   const cost = CREDIT_COST.carousel + (useAI ? CREDIT_COST.aiScript : 0);
@@ -57,7 +52,8 @@ export async function createCarousel(input: CreateInput): Promise<Carousel> {
     .insert({
       user_id: input.profile.id,
       title: input.title || input.topic?.split(/\n/)[0]?.slice(0, 80) || "Novo carrossel",
-      template_id: template.id,
+      template_id: template.base_template_id ?? template.id,
+      user_template_id: userTemplateId,
       brand_model_id: input.brandModel?.id ?? null,
       aspect: input.aspect ?? "4:5",
       status: useAI ? "generating" : "draft",
@@ -119,7 +115,7 @@ export async function createCarousel(input: CreateInput): Promise<Carousel> {
 /** Reescreve o roteiro de um carrossel existente (cobra aiScript). */
 export async function rewriteScript(carousel: Carousel, profile: Profile, locale: "pt-BR" | "en", tone = "direto") {
   const db = adminClient();
-  const template = getTemplate(carousel.template_id, await listTemplates());
+  const template = await templateForCarousel(carousel);
   await consumeCredits(profile.id, CREDIT_COST.aiScript, "carousel", `Reescrita: ${carousel.title}`, carousel.id);
   const ai = await getAI();
   const script = await ai.generateScript({
@@ -172,7 +168,7 @@ export async function generateCover(carousel: Carousel, profile: Profile, scene?
 /** Pinta todos os PNGs e sobe no Storage. Grátis (o custo é na criação). */
 export async function renderCarousel(carousel: Carousel, profile?: Profile | null): Promise<Carousel> {
   const db = adminClient();
-  const template = getTemplate(carousel.template_id, await listTemplates());
+  const template = await templateForCarousel(carousel);
   await db.from("carousels").update({ status: "rendering", error: null }).eq("id", carousel.id);
   try {
     const style = resolveStyle(template, carousel.brand_overrides, carousel.instagram_handle);

@@ -1,7 +1,7 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
-import type { AIProvider, ScriptRequest, ScriptResult, SuggestRequest, SuggestResult } from "./provider";
-import { parseScript, parseSuggest, suggestPrompt, systemPrompt, userPrompt } from "./prompts";
+import type { AIProvider, DesignRequest, DesignResult, ScriptRequest, ScriptResult, SuggestRequest, SuggestResult } from "./provider";
+import { designPrompt, parseDesign, parseScript, parseSuggest, suggestPrompt, systemPrompt, userPrompt } from "./prompts";
 import { OpenAIProvider } from "./openai";
 
 /**
@@ -35,6 +35,17 @@ export class AnthropicProvider implements AIProvider {
     });
     const text = res.content.map((b) => (b.type === "text" ? b.text : "")).join("");
     return parseSuggest(text, req.templates.map((t) => t.id));
+  }
+
+  async designAgent(req: DesignRequest): Promise<DesignResult> {
+    const res = await this.client.messages.create({
+      model: this.model,
+      max_tokens: 6000,
+      temperature: 0.4,
+      messages: [{ role: "user", content: designPrompt(req) }],
+    });
+    const text = res.content.map((b) => (b.type === "text" ? b.text : "")).join("");
+    return parseDesign(text);
   }
 
   generateCoverImage(scene: string, aspect: "4:5" | "1:1" | "wide") {

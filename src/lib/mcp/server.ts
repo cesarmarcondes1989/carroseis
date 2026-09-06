@@ -1,11 +1,11 @@
 import "server-only";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { TEMPLATE_IDS } from "@/lib/templates/registry";
 import { CREDIT_COST, type Profile } from "@/lib/types";
 import { adminClient } from "@/lib/supabase/admin";
 import { InsufficientCredits, planActive } from "@/lib/credits";
-import { appUrl, createCarousel, listBrandModels, listTemplates, renderCarousel } from "@/lib/carousel-service";
+import { appUrl, createCarousel, listBrandModels, renderCarousel } from "@/lib/carousel-service";
+import { listTemplatesFor } from "@/lib/templates/custom";
 
 const INSTRUCTIONS = `O CarrosseisIA transforma um roteiro escrito em um carrossel pronto pro Instagram.
 
@@ -30,8 +30,8 @@ export function buildMcpServer(profile: Profile) {
     "listar_templates",
     { description: "Lista os templates disponíveis (id, nome, pra que serve, se aceita capa por IA). Use o id no parâmetro 'template' de criar_carrossel.", inputSchema: {} },
     async () => {
-      const list = await listTemplates();
-      const text = [`Templates do CarrosseisIA (${list.length}):`, "", ...list.map((t) => `- ${t.id} (${t.name})${t.supports_ai_cover ? "" : " [sem capa por IA]"}: ${t.description}`), "", "Use o id da esquerda no parâmetro 'template' de criar_carrossel."].join("\n");
+      const list = await listTemplatesFor(profile.id);
+      const text = [`Templates do CarrosseisIA (${list.length}):`, "", ...list.map((t) => `- ${t.id} (${t.name})${t.custom ? " [SEU template, feito no editor]" : ""}${t.supports_ai_cover ? "" : " [sem capa por IA]"}: ${t.description}`), "", "Use o id da esquerda no parâmetro 'template' de criar_carrossel. Templates do usuário começam com 'user:'."].join("\n");
       return { content: [{ type: "text", text }] };
     },
   );
@@ -79,7 +79,7 @@ export function buildMcpServer(profile: Profile) {
           .min(2)
           .max(10)
           .describe("Os cards, em ordem. O primeiro é a capa, o último é a chamada pra ação."),
-        template: z.enum(TEMPLATE_IDS as [string, ...string[]]).optional().describe("id do template (veja listar_templates). Só pode faltar quando o modelo aplicado já traz o template dele"),
+        template: z.string().optional().describe("id do template (veja listar_templates; templates da própria pessoa começam com 'user:'). Só pode faltar quando o modelo aplicado já traz o template dele"),
         modelo: z.string().optional().describe("Nome do modelo salvo que a pessoa mandou seguir. Vazio = o modelo padrão dela entra sozinho. Nunca invente"),
         perfil: z.string().optional().describe("@ do Instagram, sem o arroba. Opcional, aparece nos cards"),
         capa: z.enum(["ia", "propria", "nenhuma"]).optional().describe("'ia' = capa por IA (cobrada quando gerar). 'propria' = a pessoa sobe a foto no app. 'nenhuma' = só texto. PERGUNTE antes"),

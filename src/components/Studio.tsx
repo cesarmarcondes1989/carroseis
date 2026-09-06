@@ -1,10 +1,11 @@
 "use client";
 import { clsx } from "clsx";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n/client";
 import { resolveStyle } from "@/lib/render/Slide";
-import { FONT_NAMES, getTemplate } from "@/lib/templates/registry";
+import { FONT_NAMES, pickTemplate } from "@/lib/templates/registry";
 import { CREDIT_COST, type Aspect, type BrandModel, type BrandOverrides, type Carousel, type Profile, type Slide, type Template } from "@/lib/types";
 import { DownloadPanel } from "./DownloadPanel";
 import { SlidePreview } from "./SlidePreview";
@@ -12,7 +13,7 @@ import { Alert, CopyButton, Field, Spinner } from "./ui";
 
 const STORAGE = process.env.NEXT_PUBLIC_SUPABASE_URL ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/carousels/` : "";
 
-export function Studio({ initial, templates, models, profile, canDownload }: { initial: Carousel; templates: Template[]; models: BrandModel[]; profile: Profile; canDownload: boolean }) {
+export function Studio({ initial, templates, models, profile, canDownload, canEditTemplates = false }: { initial: Carousel; templates: Template[]; models: BrandModel[]; profile: Profile; canDownload: boolean; canEditTemplates?: boolean }) {
   const { t } = useI18n();
   const router = useRouter();
   const [c, setC] = useState<Carousel>(initial);
@@ -25,7 +26,7 @@ export function Studio({ initial, templates, models, profile, canDownload }: { i
   const [modelName, setModelName] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const template = getTemplate(c.template_id, templates);
+  const template = pickTemplate(templates, c);
   const ov = useMemo<BrandOverrides>(() => c.brand_overrides ?? {}, [c.brand_overrides]);
   const style = useMemo(() => resolveStyle(template, ov, c.instagram_handle), [template, ov, c.instagram_handle]);
   const coverUrl = c.cover_image_path ? STORAGE + c.cover_image_path : null;
@@ -60,7 +61,7 @@ export function Studio({ initial, templates, models, profile, canDownload }: { i
   }
 
   const save = useCallback(async () => {
-    const body = { title: c.title, template_id: c.template_id, aspect: c.aspect, slides: c.slides, brand_overrides: c.brand_overrides, instagram_handle: c.instagram_handle, cover_scene: c.cover_scene, caption: c.caption, seamless: !!c.seamless };
+    const body = { title: c.title, template_id: c.template_id, user_template_id: c.user_template_id ?? null, aspect: c.aspect, slides: c.slides, brand_overrides: c.brand_overrides, instagram_handle: c.instagram_handle, cover_scene: c.cover_scene, caption: c.caption, seamless: !!c.seamless };
     const data = await call("save", () => fetch(`/api/carousels/${c.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }));
     if (data) setMsg({ kind: "ok", text: t.studio.saved });
     return !!data;
@@ -186,9 +187,13 @@ export function Studio({ initial, templates, models, profile, canDownload }: { i
         {tab === "slides" ? (
           <div className="mt-4 space-y-4">
             <Field label={t.studio.template}>
-              <select className="input" value={c.template_id} onChange={(e) => update({ template_id: e.target.value })}>
-                {templates.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+              <select className="input" value={template.id} onChange={(e) => { const x = templates.find((t) => t.id === e.target.value); if (!x) return; update(x.custom ? { user_template_id: x.user_template_id ?? null, template_id: x.base_template_id ?? c.template_id } : { template_id: x.id, user_template_id: null }); }}>
+                {templates.some((x) => x.custom) ? <optgroup label={t.templatesPage.mine}>{templates.filter((x) => x.custom).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</optgroup> : null}
+                <optgroup label={t.templatesPage.catalog}>{templates.filter((x) => !x.custom).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</optgroup>
               </select>
+              {canEditTemplates ? (
+                <Link href={template.custom ? `/app/templates/${template.user_template_id}` : `/app/templates/novo?from=${template.id}`} className="mt-1 inline-block text-xs text-lime hover:underline">✎ {template.custom ? t.templatesPage.editThis : t.templatesPage.createFrom}</Link>
+              ) : null}
             </Field>
             <Field label={t.create.aspect}>
               <div className="flex gap-2">{(["4:5", "1:1"] as Aspect[]).map((a) => <button key={a} onClick={() => update({ aspect: a })} className={clsx("btn btn-sm flex-1", c.aspect === a ? "btn-primary" : "btn-ghost")}>{a}</button>)}</div>

@@ -34,6 +34,15 @@ export function getTemplate(id: string, list: Template[] = TEMPLATES): Template 
   return list.find((t) => t.id === id) ?? list[0];
 }
 
+/** Template efetivo de um carrossel dentro de uma lista que já inclui os do usuário. */
+export function pickTemplate(list: Template[], c: { template_id: string; user_template_id?: string | null }): Template {
+  if (c.user_template_id) {
+    const mine = list.find((t) => t.user_template_id === c.user_template_id);
+    if (mine) return mine;
+  }
+  return getTemplate(c.template_id, list);
+}
+
 /** Fontes disponíveis para render (arquivos em public/fonts). */
 export const FONT_FILES: Record<string, { regular: string; bold: string }> = {
   Inter: { regular: "Inter-Regular.ttf", bold: "Inter-ExtraBold.ttf" },

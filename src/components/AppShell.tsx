@@ -14,6 +14,7 @@ export function AppShell({ profile, children }: { profile: Profile; children: Re
     { href: "/app/novo", label: t.app.newCarousel, icon: "＋" },
     { href: "/app/modelos", label: t.app.models, icon: "◐" },
     { href: "/app/creditos", label: t.app.credits, icon: "◈" },
+    { href: "/app/templates", label: t.app.templates, icon: "✎" },
     { href: "/app/chave-api", label: t.app.apiKeys, icon: "⌘" },
     { href: "/app/conta", label: t.app.account, icon: "●" },
     ...(profile.role === "admin" ? [{ href: "/admin", label: t.app.admin, icon: "★" }] : []),

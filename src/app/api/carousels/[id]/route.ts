@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getOwnedCarousel, handleError, requireProfile } from "@/lib/api";
+import { getOwnedCarousel, handleError, HttpError, requireProfile } from "@/lib/api";
 import { adminClient } from "@/lib/supabase/admin";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -25,6 +25,7 @@ const patch = z.object({
   cover_mode: z.enum(["ai", "own", "none"]).optional(),
   caption: z.string().max(3000).nullable().optional(),
   seamless: z.boolean().optional(),
+  user_template_id: z.string().uuid().nullable().optional(),
 });
 
 export async function GET(_req: Request, { params }: Ctx) {
@@ -42,7 +43,11 @@ export async function PATCH(req: Request, { params }: Ctx) {
     const profile = await requireProfile();
     const carousel = await getOwnedCarousel((await params).id, profile);
     const body = patch.parse(await req.json());
-    const changesArt = body.slides || body.template_id || body.aspect || body.brand_overrides !== undefined || body.instagram_handle !== undefined || body.cover_mode || body.seamless !== undefined;
+    if (body.user_template_id) {
+      const { data: own } = await adminClient().from("user_templates").select("id").eq("id", body.user_template_id).eq("user_id", carousel.user_id).maybeSingle();
+      if (!own) throw new HttpError(404, "Template não encontrado.");
+    }
+    const changesArt = body.slides || body.template_id || body.aspect || body.brand_overrides !== undefined || body.instagram_handle !== undefined || body.cover_mode || body.seamless !== undefined || body.user_template_id !== undefined;
     const { data, error } = await adminClient()
       .from("carousels")
       .update({ ...body, ...(changesArt ? { renders: [], status: carousel.status === "ready" ? "draft" : carousel.status } : {}) })

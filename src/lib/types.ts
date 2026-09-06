@@ -28,6 +28,11 @@ export type Template = {
   supports_ai_cover: boolean;
   sort_order: number;
   active?: boolean;
+  /** Template por camadas (editor). Quando presente, o render usa o LayerCanvas. */
+  layers?: import("@/lib/layers/types").LayerTemplate | null;
+  custom?: boolean;
+  user_template_id?: string;
+  base_template_id?: string;
 };
 
 export type Slide = {
@@ -50,6 +55,7 @@ export type BrandModel = {
   user_id: string;
   name: string;
   template_id: string | null;
+  user_template_id?: string | null;
   palette: Partial<Palette> | null;
   font_display: string | null;
   font_body: string | null;
@@ -65,6 +71,7 @@ export type Carousel = {
   user_id: string;
   title: string;
   template_id: string;
+  user_template_id: string | null;
   brand_model_id: string | null;
   aspect: Aspect;
   status: CarouselStatus;

@@ -1,7 +1,7 @@
 import "server-only";
 import OpenAI from "openai";
-import type { AIProvider, ScriptRequest, ScriptResult, SuggestRequest, SuggestResult } from "./provider";
-import { coverPrompt, parseScript, parseSuggest, suggestPrompt, systemPrompt, userPrompt } from "./prompts";
+import type { AIProvider, DesignRequest, DesignResult, ScriptRequest, ScriptResult, SuggestRequest, SuggestResult } from "./provider";
+import { coverPrompt, designPrompt, parseDesign, parseScript, parseSuggest, suggestPrompt, systemPrompt, userPrompt } from "./prompts";
 
 export class OpenAIProvider implements AIProvider {
   name = "openai";
@@ -30,6 +30,16 @@ export class OpenAIProvider implements AIProvider {
       messages: [{ role: "user", content: suggestPrompt(req) }],
     });
     return parseSuggest(res.choices[0]?.message?.content ?? "{}", req.templates.map((t) => t.id));
+  }
+
+  async designAgent(req: DesignRequest): Promise<DesignResult> {
+    const res = await this.client.chat.completions.create({
+      model: process.env.OPENAI_DESIGN_MODEL ?? this.textModel,
+      temperature: 0.4,
+      response_format: { type: "json_object" },
+      messages: [{ role: "user", content: designPrompt(req) }],
+    });
+    return parseDesign(res.choices[0]?.message?.content ?? "{}");
   }
 
   async generateCoverImage(scene: string, aspect: "4:5" | "1:1" | "wide") {

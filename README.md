@@ -50,6 +50,14 @@ No estúdio, os cards prontos aparecem num painel de download: no celular, "Salv
 
 Rode `supabase/migrations/0004_seamless.sql`. Com a opção ligada (criador, estúdio ou `fundo_continuo` no MCP), o renderizador pinta um panorama de largura `1080 × cards` e cada card mostra a sua fatia: gradiente, formas, título fantasma e a foto de capa atravessam as bordas. Capa por IA nesse modo sai em paisagem (1536×1024). Pra conferir a continuidade localmente: `npx tsx scripts/strip.ts <template> 4x5` monta os cards lado a lado.
 
+## Editor de templates (plano Agência)
+
+Rode `supabase/migrations/0005_user_templates.sql`. Quem tem plano **Agência** (ou conta ilimitada/admin) ganha `/app/templates`: um editor estilo Canva onde o slide é montado por **camadas** (texto, forma, etiqueta, imagem, paginação) num canvas de 1080×1350, separadas por papel (capa, miolo, última). Dá pra arrastar e redimensionar direto no stage, com imãs nas bordas, margem segura, centro e outras camadas; undo/redo; atalhos (setas, Ctrl+Z/Y, Ctrl+D, Delete); paleta e fontes próprias; upload de imagem. Pontos de partida: folha em branco ou presets (nicho, insider, texto corrido, notícia). Templates salvos aparecem como "Meus templates" no criador, no estúdio e no `listar_templates` do MCP (id `user:<uuid>`), e o carrossel guarda `user_template_id` mantendo o template base como fallback.
+
+Textos das camadas aceitam `{titulo}`, `{texto}`, `{etiqueta}`, `{handle}`, `{index}`, `{total}` e `{n}`; cores aceitam tokens da paleta (`bg`, `fg`, `accent`, `muted`, `accent2`, `auto`), `token@alpha`, hex ou string de gradiente.
+
+A aba **Agente** manda uma instrução em linguagem natural (ex.: "capa mais ousada, título maior e etiqueta no canto") pro designer de IA (`designAgent` no provider, modelo `OPENAI_DESIGN_MODEL` ou o de texto); a resposta é validada com zod antes de entrar no editor e pode ser desfeita. Pra conferir os presets localmente através do Satori: `npx tsx scripts/layers-test.ts` gera PNGs em `/tmp/layers`.
+
 ## Painel admin (`/admin`)
 
 Rode também `supabase/migrations/0002_admin.sql` (ou `supabase db push`). Ele cria auditoria, banimento, estatísticas agregadas e a proteção da **conta dona**.
