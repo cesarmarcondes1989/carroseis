@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+/* Fontes usadas nas artes (mesmos arquivos que o Satori usa no servidor) */
+@font-face { font-family: "Inter"; src: url("/fonts/Inter-Regular.ttf"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("/fonts/Inter-ExtraBold.ttf"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Montserrat"; src: url("/fonts/Montserrat-Regular.ttf"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Montserrat"; src: url("/fonts/Montserrat-Black.ttf"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Space Grotesk"; src: url("/fonts/SpaceGrotesk-Regular.ttf"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Space Grotesk"; src: url("/fonts/SpaceGrotesk-Bold.ttf"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Playfair Display"; src: url("/fonts/PlayfairDisplay-Regular.ttf"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Playfair Display"; src: url("/fonts/PlayfairDisplay-Black.ttf"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Poppins"; src: url("/fonts/Poppins-Regular.ttf"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Poppins"; src: url("/fonts/Poppins-Bold.ttf"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Bebas Neue"; src: url("/fonts/BebasNeue-Regular.ttf"); font-weight: 400 700; font-display: swap; }
+@font-face { font-family: "DM Serif Display"; src: url("/fonts/DMSerifDisplay-Regular.ttf"); font-weight: 400 700; font-display: swap; }
+@font-face { font-family: "Archivo Black"; src: url("/fonts/ArchivoBlack-Regular.ttf"); font-weight: 400 700; font-display: swap; }
+@font-face { font-family: "Anton"; src: url("/fonts/Anton-Regular.ttf"); font-weight: 400 700; font-display: swap; }
+
+:root {
+  --bg: #07070a;
+  --bg-2: #0e0e13;
+  --bg-3: #15151c;
+  --fg: #f4f4f5;
+  --fg-2: #a1a1aa;
+  --fg-3: #63636e;
+  --line: #24242c;
+  --lime: #d4ff3f;
+  --lime-2: #a3e635;
+  --violet: #8b5cf6;
+  --pink: #f472b6;
+  --danger: #f43f5e;
+  --ok: #34d399;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-bg-3: var(--bg-3);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-line: var(--line);
+  --color-lime: var(--lime);
+  --color-lime-2: var(--lime-2);
+  --color-violet: var(--violet);
+  --color-pink: var(--pink);
+  --color-danger: var(--danger);
+  --color-ok: var(--ok);
+  --font-sans: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+html { color-scheme: dark; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--lime); color: #0a0a0a; }
+
+.glow {
+  background:
+    radial-gradient(60% 50% at 20% 0%, rgba(212, 255, 63, 0.18), transparent 60%),
+    radial-gradient(50% 40% at 90% 10%, rgba(139, 92, 246, 0.25), transparent 60%),
+    radial-gradient(40% 40% at 60% 100%, rgba(244, 114, 182, 0.12), transparent 60%);
+}
+.grid-bg {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+.card { background: var(--bg-2); border: 1px solid var(--line); border-radius: 20px; }
+.input {
+  width: 100%; background: var(--bg-3); border: 1px solid var(--line); border-radius: 12px;
+  padding: 12px 14px; color: var(--fg); outline: none; font-size: 15px;
+}
+.input:focus { border-color: var(--lime); box-shadow: 0 0 0 3px rgba(212, 255, 63, 0.15); }
+.input::placeholder { color: var(--fg-3); }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: 12px; padding: 12px 18px; font-weight: 700; font-size: 15px;
+  transition: transform 0.08s ease, background 0.15s ease, opacity 0.15s ease; cursor: pointer;
+  border: 1px solid transparent; white-space: nowrap;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: var(--lime); color: #0a0a0a; }
+.btn-primary:hover:not(:disabled) { background: #e2ff70; }
+.btn-ghost { background: transparent; color: var(--fg); border-color: var(--line); }
+.btn-ghost:hover:not(:disabled) { background: var(--bg-3); }
+.btn-danger { background: transparent; color: var(--danger); border-color: rgba(244, 63, 94, 0.35); }
+.btn-danger:hover:not(:disabled) { background: rgba(244, 63, 94, 0.12); }
+.btn-sm { padding: 8px 12px; font-size: 13px; border-radius: 10px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.marquee { animation: marquee 40s linear infinite; }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.fade-up { animation: fadeUp 0.6s ease both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.scrollbar-thin::-webkit-scrollbar { height: 8px; width: 8px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: var(--line); border-radius: 8px; }
