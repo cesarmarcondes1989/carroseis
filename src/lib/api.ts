@@ -1,6 +1,7 @@
 import "server-only";
 import { getSession } from "@/lib/supabase/server";
 import { InsufficientCredits } from "@/lib/credits";
+import { ZodError } from "zod";
 import type { Profile } from "@/lib/types";
 
 export class HttpError extends Error {
@@ -16,8 +17,21 @@ export async function requireProfile(): Promise<Profile> {
   return profile;
 }
 
+const FIELD_LABELS: Record<string, string> = { topic: "tema", url: "link", script: "roteiro", handle: "@ do Instagram", coverScene: "cena da capa", slidesCount: "quantidade de cards", name: "nome", email: "email", credits: "créditos" };
+
+export function zodMessage(e: ZodError) {
+  const issue = e.issues[0];
+  if (!issue) return "Dados inválidos.";
+  const field = FIELD_LABELS[String(issue.path[0] ?? "")] ?? String(issue.path[0] ?? "campo");
+  if (issue.code === "too_big" && "maximum" in issue) return `O ${field} passou do limite de ${Number(issue.maximum).toLocaleString("pt-BR")} caracteres.`;
+  if (issue.code === "too_small" && "minimum" in issue) return Number(issue.minimum) <= 1 ? `Preencha o ${field}.` : `O ${field} precisa de pelo menos ${issue.minimum} caracteres.`;
+  if (issue.code === "invalid_format") return `O ${field} está num formato inválido.`;
+  return `Confira o ${field}: ${issue.message}`;
+}
+
 export function handleError(e: unknown) {
   if (e instanceof HttpError) return Response.json({ error: e.message }, { status: e.status });
+  if (e instanceof ZodError) return Response.json({ error: zodMessage(e) }, { status: 400 });
   if (e instanceof InsufficientCredits) return Response.json({ error: "INSUFFICIENT_CREDITS", message: "Créditos insuficientes." }, { status: 402 });
   const msg = e instanceof Error ? e.message : "Erro inesperado";
   console.error(e);

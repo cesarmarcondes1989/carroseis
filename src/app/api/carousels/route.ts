@@ -11,7 +11,7 @@ export const maxDuration = 120;
 const schema = z.object({
   templateId: z.string(),
   source: z.enum(["topic", "url", "youtube", "pdf", "script"]),
-  topic: z.string().max(2000).optional(),
+  topic: z.string().max(12000).optional(),
   url: z.preprocess((v) => (v === "" ? undefined : v), z.string().url().optional()),
   script: z.string().max(20000).optional(),
   slidesCount: z.coerce.number().int().min(2).max(10).default(7),

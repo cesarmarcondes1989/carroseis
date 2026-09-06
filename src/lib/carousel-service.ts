@@ -65,7 +65,7 @@ export async function createCarousel(input: CreateInput): Promise<Carousel> {
     .from("carousels")
     .insert({
       user_id: input.profile.id,
-      title: input.title || input.topic?.slice(0, 80) || "Novo carrossel",
+      title: input.title || input.topic?.split(/\n/)[0]?.slice(0, 80) || "Novo carrossel",
       template_id: template.id,
       brand_model_id: input.brandModel?.id ?? null,
       aspect: input.aspect ?? "4:5",
@@ -93,7 +93,7 @@ export async function createCarousel(input: CreateInput): Promise<Carousel> {
     const ai = await getAI();
     const script = await ai.generateScript({
       topic: input.topic || input.title || "Conteúdo",
-      sourceText: input.source === "topic" ? null : input.sourceInput,
+      sourceText: input.source === "topic" ? (input.topic && input.topic.length > 300 ? input.topic : null) : input.sourceInput,
       templateName: template.name,
       templateHint: template.description,
       slidesCount: input.slidesCount ?? 7,
