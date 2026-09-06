@@ -17,7 +17,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const index = Number(n) - 1;
     const render = carousel.renders?.find((r) => r.index === index);
     if (!render) throw new HttpError(404, "Card não encontrado. Pinte os PNGs primeiro.");
-    const res = await fetch(render.url);
+    const res = await fetch(render.url, { cache: "no-store" });
     if (!res.ok) throw new HttpError(502, "Falha ao ler o card.");
     const inline = new URL(req.url).searchParams.get("inline") === "1";
     if (index === 0) await logUsage(profile.id, "carousel.download", { carousel: carousel.id, mode: "slide" });
@@ -26,7 +26,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       headers: {
         "content-type": "image/png",
         "content-disposition": `${inline ? "inline" : "attachment"}; filename="${name}"`,
-        "cache-control": "private, max-age=3600",
+        // Sem cache: o mesmo /slide/N pode virar outra imagem (regerou com outro template).
+        // Cachear por URL fazia o navegador entregar o PNG antigo depois de trocar o template.
+        "cache-control": "no-store",
       },
     });
   } catch (e) {

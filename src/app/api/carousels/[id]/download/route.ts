@@ -14,7 +14,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     if (!carousel.renders?.length) throw new HttpError(400, "Pinte os PNGs primeiro.");
     const zip = new JSZip();
     for (const r of carousel.renders) {
-      const res = await fetch(r.url);
+      const res = await fetch(r.url, { cache: "no-store" });
       if (!res.ok) throw new Error(`Falha ao baixar o card ${r.index + 1}`);
       zip.file(`${String(r.index + 1).padStart(2, "0")}.png`, await res.arrayBuffer());
     }
